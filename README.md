@@ -153,3 +153,26 @@ service cloud.firestore {
 | Чёрный экран | Откройте F12 → Console, смотрите ошибки |
 
 Удачной торговли! 🛡️
+
+
+## Деплой на GitHub Pages
+
+1. Залей содержимое папки `follayt-app` в репозиторий (корень или /docs).
+2. В Firebase Console → Authentication → Settings → **Authorized domains** добавь:
+   - `floralss.github.io`
+   - `localhost`
+3. Firestore Rules — для старта минимум:
+```
+match /products/{id} {
+  allow read: if true;
+  allow write: if request.auth != null;
+}
+match /users/{id} {
+  allow read: if true;
+  allow write: if request.auth != null;
+}
+```
+Без `allow read: if true` на products сайт будет крутить спиннер вечно.
+
+## Иконка сайта
+Файл `assets/favicon.svg` — щит Follayt. Уже подключена в index.html.
