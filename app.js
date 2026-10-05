@@ -10,6 +10,7 @@
   var LS = 'iz_v6_';
   var CS_KEY = 'iz_user_v6';
   var user = null, opening = false, selCase = null, selItem = null;
+  var mode = 'tg'; // tg | cs2
 
   function $(id) { return document.getElementById(id); }
   function toast(m, t) {
@@ -54,6 +55,7 @@
     return '';
   }
   function caseImg(id) {
+    if (mode === 'cs2') return skinIcon(activeCases()[id] ? activeCases()[id].name : 'CS2');
     return (window.CASE_IMG && window.CASE_IMG[id]) || icon('Toy Bear');
   }
   function gameImg(id) {
@@ -63,75 +65,172 @@
   /* ===== CASES (English, TG prices) ===== */
   var CASES = {
     free: {
-      id: 'free', name: 'Free', price: 0, desc: 'Once every 24h', cls: 'free',
+      id: 'free', name: 'Daily', price: 0, desc: 'Once every 24h', cls: 'free',
       prizes: [
-        { name: '1 Star', value: 1, chance: 50 },
-        { name: '2 Stars', value: 2, chance: 28 },
-        { name: '5 Stars', value: 5, chance: 10 },
-        { name: 'Toy Bear', value: 15, chance: 5 },
-        { name: 'Eternal Rose', value: 25, chance: 3 },
-        { name: 'Homemade Cake', value: 50, chance: 2 },
-        { name: 'Snow Mittens', value: 500, chance: 1, nft: true },
-        { name: 'Bunny Muffin', value: 510, chance: 0.6, nft: true },
-        { name: 'Ice Cream', value: 505, chance: 0.4, nft: true }
+        { name: '1 Star', value: 1, chance: 58 },
+        { name: '2 Stars', value: 2, chance: 30 },
+        { name: '5 Stars', value: 5, chance: 9 },
+        { name: 'Toy Bear', value: 15, chance: 2.2 },
+        { name: 'Eternal Rose', value: 25, chance: 0.7 },
+        { name: 'Homemade Cake', value: 50, chance: 0.0999 },
+        { name: 'Snow Mittens', value: 500, chance: 0.00005, nft: true },
+        { name: 'Bunny Muffin', value: 510, chance: 0.00003, nft: true },
+        { name: 'Ice Cream', value: 505, chance: 0.00002, nft: true }
+        /* NFT total chance in Daily = 0.0001 */
       ]
     },
     cheap: {
-      id: 'cheap', name: 'Starter', price: 15, desc: 'Classic + NFT', cls: 'cheap',
+      id: 'cheap', name: 'Base', price: 15, desc: 'Classic gifts', cls: 'cheap',
       prizes: [
-        { name: 'Toy Bear', value: 15, chance: 26 },
-        { name: 'Eternal Rose', value: 25, chance: 20 },
-        { name: 'Homemade Cake', value: 50, chance: 14 },
+        { name: 'Toy Bear', value: 15, chance: 35 },
+        { name: 'Eternal Rose', value: 25, chance: 28 },
+        { name: 'Homemade Cake', value: 50, chance: 18 },
         { name: 'Berry Box', value: 50, chance: 12 },
-        { name: 'Cookie Heart', value: 50, chance: 10 },
-        { name: 'B-Day Candle', value: 50, chance: 8 },
-        { name: 'Snow Mittens', value: 500, chance: 4, nft: true },
-        { name: 'Jack-in-the-Box', value: 500, chance: 3, nft: true },
-        { name: 'Ice Cream', value: 505, chance: 2, nft: true },
-        { name: 'Top Hat', value: 530, chance: 1, nft: true }
+        { name: 'Cookie Heart', value: 50, chance: 5 },
+        { name: 'B-Day Candle', value: 50, chance: 1.896 },
+        { name: 'Snow Mittens', value: 500, chance: 0.0004, nft: true },
+        { name: 'Jack-in-the-Box', value: 500, chance: 0.0003, nft: true },
+        { name: 'Ice Cream', value: 505, chance: 0.0002, nft: true },
+        { name: 'Top Hat', value: 530, chance: 0.0001, nft: true }
       ]
     },
     selected: {
-      id: 'selected', name: 'Select', price: 100, desc: 'Market NFT 500-700', cls: 'sel',
+      id: 'selected', name: 'Izbrannik', price: 100, desc: 'Market NFT rare', cls: 'sel',
       prizes: [
-        { name: 'Ice Cream', value: 505, chance: 12, nft: true },
-        { name: 'Snow Mittens', value: 500, chance: 11, nft: true },
-        { name: 'Hanging Star', value: 505, chance: 10, nft: true },
-        { name: 'Bunny Muffin', value: 510, chance: 9, nft: true },
-        { name: 'Spiced Wine', value: 500, chance: 8, nft: true },
-        { name: 'Top Hat', value: 530, chance: 7, nft: true },
-        { name: 'Hypno Lollipop', value: 544, chance: 6, nft: true },
-        { name: 'Lunar Snake', value: 549, chance: 6, nft: true },
-        { name: 'Jester Hat', value: 550, chance: 5, nft: true },
-        { name: 'Witch Hat', value: 550, chance: 5, nft: true },
-        { name: 'Party Sparkler', value: 587, chance: 4, nft: true },
-        { name: 'Magic Potion', value: 600, chance: 4, nft: true },
-        { name: 'Skull Flower', value: 600, chance: 3, nft: true },
-        { name: 'Genie Lamp', value: 650, chance: 3, nft: true },
-        { name: 'Voodoo Doll', value: 655, chance: 2.5, nft: true },
-        { name: 'Crystal Ball', value: 666, chance: 2, nft: true },
-        { name: 'Trapped Heart', value: 690, chance: 1.5, nft: true }
+        { name: 'Homemade Cake', value: 50, chance: 28 },
+        { name: 'Berry Box', value: 50, chance: 22 },
+        { name: 'Cookie Heart', value: 50, chance: 18 },
+        { name: 'B-Day Candle', value: 50, chance: 15 },
+        { name: 'Love Candle', value: 50, chance: 10 },
+        { name: 'Desk Calendar', value: 50, chance: 6.5 },
+        { name: 'Ice Cream', value: 505, chance: 0.00015, nft: true },
+        { name: 'Top Hat', value: 530, chance: 0.00012, nft: true },
+        { name: 'Hypno Lollipop', value: 544, chance: 0.0001, nft: true },
+        { name: 'Lunar Snake', value: 549, chance: 0.00008, nft: true },
+        { name: 'Jester Hat', value: 550, chance: 0.00006, nft: true },
+        { name: 'Party Sparkler', value: 587, chance: 0.00005, nft: true },
+        { name: 'Magic Potion', value: 600, chance: 0.00004, nft: true },
+        { name: 'Genie Lamp', value: 650, chance: 0.00003, nft: true },
+        { name: 'Trapped Heart', value: 690, chance: 0.00002, nft: true },
+        { name: 'Crystal Ball', value: 666, chance: 0.00001, nft: true }
       ]
     },
     vip: {
-      id: 'vip', name: 'VIP', price: 250, desc: 'Rare collectibles', cls: 'vip',
+      id: 'vip', name: 'Pepe', price: 250, desc: 'Ultra rare collectibles', cls: 'vip',
       prizes: [
-        { name: 'Vintage Cigar', value: 700, chance: 14, nft: true },
-        { name: 'Perfume Bottle', value: 710, chance: 12, nft: true },
-        { name: 'Kissed Frog', value: 721, chance: 11, nft: true },
-        { name: 'Jelly Bunny', value: 721, chance: 10, nft: true },
-        { name: 'Scared Cat', value: 721, chance: 9, nft: true },
-        { name: 'Signet Ring', value: 700, chance: 8, nft: true },
-        { name: 'Spy Agaric', value: 814, chance: 7, nft: true },
-        { name: 'Astral Shard', value: 800, chance: 6, nft: true },
-        { name: 'Precious Peach', value: 900, chance: 5, nft: true },
-        { name: 'Plush Pepe', value: 900, chance: 5, nft: true },
-        { name: "Durov's Cap", value: 1000, chance: 4, nft: true },
-        { name: 'Flying Broom', value: 650, chance: 5, nft: true },
-        { name: 'Evil Eye', value: 550, chance: 4, nft: true }
+        { name: 'Homemade Cake', value: 50, chance: 30 },
+        { name: 'Berry Box', value: 50, chance: 22 },
+        { name: 'Desk Calendar', value: 50, chance: 18 },
+        { name: 'Love Candle', value: 50, chance: 15 },
+        { name: 'B-Day Candle', value: 50, chance: 12 },
+        { name: 'Eternal Rose', value: 25, chance: 2.9 },
+        { name: 'Vintage Cigar', value: 700, chance: 0.0002, nft: true },
+        { name: 'Perfume Bottle', value: 710, chance: 0.00015, nft: true },
+        { name: 'Kissed Frog', value: 721, chance: 0.00012, nft: true },
+        { name: 'Jelly Bunny', value: 721, chance: 0.0001, nft: true },
+        { name: 'Scared Cat', value: 721, chance: 0.00008, nft: true },
+        { name: 'Spy Agaric', value: 814, chance: 0.00006, nft: true },
+        { name: 'Astral Shard', value: 800, chance: 0.00005, nft: true },
+        { name: 'Precious Peach', value: 900, chance: 0.00004, nft: true },
+        { name: 'Plush Pepe', value: 900, chance: 0.00003, nft: true },
+        { name: "Durov's Cap", value: 1000, chance: 0.00002, nft: true }
       ]
     }
   };
+
+
+  /* CS2 cases — skins (admin test) */
+  var CS2_CASES = {
+    free: {
+      id: 'free', name: 'Daily CS2', price: 0, desc: 'Once every 24h', cls: 'free',
+      prizes: [
+        { name: 'P250 | Sand Dune', value: 1, chance: 40, skin: true },
+        { name: 'MP9 | Storm', value: 2, chance: 30, skin: true },
+        { name: 'UMP-45 | Indigo', value: 3, chance: 18, skin: true },
+        { name: 'Glock-18 | Groundwater', value: 5, chance: 8, skin: true },
+        { name: 'AK-47 | Elite Build', value: 25, chance: 3.5, skin: true },
+        { name: 'AWP | Safari Mesh', value: 40, chance: 0.499, skin: true },
+        { name: 'AK-47 | Redline', value: 200, chance: 0.0007, skin: true, nft: true },
+        { name: 'AWP | Asiimov', value: 400, chance: 0.0002, skin: true, nft: true },
+        { name: 'Karambit | Doppler', value: 1200, chance: 0.0001, skin: true, nft: true }
+      ]
+    },
+    cheap: {
+      id: 'cheap', name: 'Base CS2', price: 15, desc: 'Blue / purple skins', cls: 'cheap',
+      prizes: [
+        { name: 'P250 | Sand Dune', value: 1, chance: 25, skin: true },
+        { name: 'Five-SeveN | Forest Night', value: 2, chance: 22, skin: true },
+        { name: 'MP7 | Army Recon', value: 3, chance: 20, skin: true },
+        { name: 'USP-S | Forest Leaves', value: 5, chance: 15, skin: true },
+        { name: 'M4A4 | Magnesium', value: 15, chance: 10, skin: true },
+        { name: 'AK-47 | Elite Build', value: 25, chance: 6, skin: true },
+        { name: 'AWP | Worm God', value: 50, chance: 1.998, skin: true },
+        { name: 'AK-47 | Redline', value: 200, chance: 0.001, skin: true, nft: true },
+        { name: 'M4A1-S | Printstream', value: 350, chance: 0.0007, skin: true, nft: true },
+        { name: 'AWP | Asiimov', value: 400, chance: 0.0003, skin: true, nft: true }
+      ]
+    },
+    selected: {
+      id: 'selected', name: 'Izbrannik CS2', price: 100, desc: 'High tier skins', cls: 'sel',
+      prizes: [
+        { name: 'AK-47 | Elite Build', value: 25, chance: 28, skin: true },
+        { name: 'M4A4 | Magnesium', value: 15, chance: 24, skin: true },
+        { name: 'AWP | Worm God', value: 50, chance: 20, skin: true },
+        { name: 'USP-S | Kill Confirmed', value: 80, chance: 15, skin: true },
+        { name: 'Glock-18 | Water Elemental', value: 40, chance: 10, skin: true },
+        { name: 'AK-47 | Redline', value: 200, chance: 2.5, skin: true },
+        { name: 'M4A1-S | Printstream', value: 350, chance: 0.4985, skin: true },
+        { name: 'AWP | Asiimov', value: 400, chance: 0.001, skin: true, nft: true },
+        { name: 'Butterfly Knife | Slaughter', value: 900, chance: 0.0004, skin: true, nft: true },
+        { name: 'Karambit | Doppler', value: 1200, chance: 0.0001, skin: true, nft: true }
+      ]
+    },
+    vip: {
+      id: 'vip', name: 'Pepe CS2', price: 250, desc: 'Knives & covers', cls: 'vip',
+      prizes: [
+        { name: 'AK-47 | Redline', value: 200, chance: 30, skin: true },
+        { name: 'AWP | Asiimov', value: 400, chance: 25, skin: true },
+        { name: 'M4A1-S | Printstream', value: 350, chance: 22, skin: true },
+        { name: 'USP-S | Kill Confirmed', value: 80, chance: 15, skin: true },
+        { name: 'Desert Eagle | Blaze', value: 300, chance: 6, skin: true },
+        { name: 'Butterfly Knife | Slaughter', value: 900, chance: 1.5, skin: true },
+        { name: 'Karambit | Doppler', value: 1200, chance: 0.4985, skin: true },
+        { name: 'Karambit | Fade', value: 1500, chance: 0.001, skin: true, nft: true },
+        { name: 'Sport Gloves | Pandora', value: 2000, chance: 0.0004, skin: true, nft: true },
+        { name: 'Karambit | Case Hardened', value: 2500, chance: 0.0001, skin: true, nft: true }
+      ]
+    }
+  };
+
+  function activeCases() {
+    return mode === 'cs2' ? CS2_CASES : CASES;
+  }
+  function activeInv() {
+    if (!user) return [];
+    return mode === 'cs2' ? (user.inventory_cs2 || []) : (user.inventory || []);
+  }
+  function setActiveInv(arr) {
+    if (!user) return;
+    if (mode === 'cs2') user.inventory_cs2 = arr;
+    else user.inventory = arr;
+  }
+  function isAdminUser() {
+    return user && ADMIN_IDS.indexOf(user.id) !== -1;
+  }
+  function skinIcon(name) {
+    // simple colored plate with weapon initials
+    var colors = ['#3d5a80','#ee6c4d','#293241','#98c1d9','#e0fbfc','#1b4332','#7f4f24','#5e60ce'];
+    var h = 0;
+    for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    var bg = colors[h % colors.length];
+    var label = name.split('|')[0].trim().slice(0, 6);
+    var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="' + bg + '"/><text x="32" y="36" text-anchor="middle" fill="#fff" font-size="11" font-family="sans-serif" font-weight="700">' + label.replace(/&/g,'') + '</text></svg>';
+    return 'data:image/svg+xml,' + encodeURIComponent(s);
+  }
+  function itemIcon(name, isSkin) {
+    if (isSkin || mode === 'cs2') return skinIcon(name);
+    return icon(name);
+  }
 
   function roll(prizes) {
     var t = 0, i;
@@ -146,6 +245,7 @@
     return JSON.stringify({
       balance: user.balance || 0,
       inventory: user.inventory || [],
+      inventory_cs2: user.inventory_cs2 || [],
       last_free: user.last_free || 0,
       total_deposited: user.total_deposited || 0,
       total_spent: user.total_spent || 0,
@@ -160,6 +260,7 @@
       if (!d || typeof d !== 'object') return into;
       if (typeof d.balance === 'number') into.balance = d.balance;
       if (Array.isArray(d.inventory)) into.inventory = d.inventory;
+      if (Array.isArray(d.inventory_cs2)) into.inventory_cs2 = d.inventory_cs2;
       if (typeof d.last_free === 'number') into.last_free = d.last_free;
       if (typeof d.total_deposited === 'number') into.total_deposited = d.total_deposited;
       if (typeof d.total_spent === 'number') into.total_spent = d.total_spent;
@@ -230,6 +331,21 @@
       user.last_free = 0;
       toast('Free case ready!', 'success');
     }
+    // Admin completed withdraw: ?wd_ok=WDID
+    try {
+      var q2 = new URLSearchParams(window.location.search || '');
+      var wdOk = q2.get('wd_ok');
+      if (wdOk && user.inventory) {
+        var before = user.inventory.length;
+        user.inventory = user.inventory.filter(function (it) {
+          return !(it.wd_id && (String(it.wd_id) === wdOk || String(it.wd_id).slice(-8) === wdOk));
+        });
+        if (user.inventory.length < before) {
+          toast('Withdraw completed — item removed', 'success');
+          sfx('win');
+        }
+      }
+    } catch (e) {}
     save();
   }
 
@@ -270,6 +386,43 @@
     });
   }
 
+
+  function setMode(m) {
+    if (m === 'cs2' && !isAdminUser()) {
+      mode = 'cs2';
+      document.getElementById('app').classList.add('mode-cs2');
+      document.getElementById('app').classList.remove('mode-tg');
+      document.querySelectorAll('.mode-btn').forEach(function (b) {
+        b.classList.toggle('on', b.getAttribute('data-mode') === 'cs2');
+      });
+      var lock = $('cs2Lock');
+      if (lock) lock.classList.remove('hide');
+      // hide cases content under lock feel
+      var grid = $('casesGrid');
+      if (grid) grid.innerHTML = '';
+      renderInv();
+      renderProf();
+      toast('CS2 temporarily unavailable', 'error');
+      return;
+    }
+    mode = m;
+    var lock = $('cs2Lock');
+    if (lock) lock.classList.toggle('hide', m !== 'cs2' || isAdminUser());
+    if (m === 'cs2' && isAdminUser() && lock) lock.classList.add('hide');
+    document.getElementById('app').classList.toggle('mode-cs2', m === 'cs2');
+    document.getElementById('app').classList.toggle('mode-tg', m === 'tg');
+    document.querySelectorAll('.mode-btn').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-mode') === m);
+    });
+    renderCases();
+    renderInv();
+    renderProf();
+    var h = document.querySelector('#tab-cases .h2');
+    if (h) h.textContent = m === 'cs2' ? 'CS2 Cases' : 'Cases';
+    var hi = document.querySelector('#tab-inventory .h2');
+    if (hi) hi.textContent = m === 'cs2' ? 'CS2 Inventory' : 'Inventory';
+  }
+
   /* tabs */
   function tab(name) {
     document.querySelectorAll('.nb').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-t') === name); });
@@ -284,8 +437,8 @@
     var g = $('casesGrid'); if (!g || !user) return;
     g.innerHTML = '';
     var now = Date.now();
-    Object.keys(CASES).forEach(function (k) {
-      var c = CASES[k], ph;
+    Object.keys(activeCases()).forEach(function (k) {
+      var c = activeCases()[k], ph;
       if (c.id === 'free') {
         var left = (user.last_free || 0) + 86400000 - now;
         if (left > 0) {
@@ -302,7 +455,7 @@
   }
 
   function openPrev(id) {
-    var c = CASES[id]; if (!c) return;
+    var c = activeCases()[id]; if (!c) return;
     selCase = id;
     $('cpN').textContent = c.name;
     $('cpD').textContent = c.desc;
@@ -326,7 +479,7 @@
     c.prizes.slice().sort(function (a, b) { return b.chance - a.chance; }).forEach(function (p) {
       var row = document.createElement('div');
       row.className = 'pr' + (p.nft ? ' nft' : '');
-      row.innerHTML = '<div class="pp"><img src="' + icon(p.name) + '" width="36" height="36" style="border-radius:8px"></div><div class="pi"><div class="pn2">' + p.name + (p.nft ? ' · NFT' : '') + '</div><div class="pc">' + p.chance + '%</div></div><div class="pv2">' + p.value + ' ★</div>';
+      row.innerHTML = '<div class="pp"><img src="' + itemIcon(p.name, p.skin) + '" width="36" height="36" style="border-radius:8px"></div><div class="pi"><div class="pn2">' + p.name + (p.nft ? ' · Rare' : '') + '</div><div class="pc">' + p.chance + '%</div></div><div class="pv2">' + p.value + ' ★</div>';
       list.appendChild(row);
     });
     $('shCase').classList.add('on');
@@ -334,7 +487,7 @@
 
   function doOpen(id) {
     if (opening) return;
-    var c = CASES[id]; if (!c) return;
+    var c = activeCases()[id]; if (!c) return;
     if (id === 'free') {
       if (Date.now() < (user.last_free || 0) + 86400000) { toast('Free not ready', 'error'); return; }
     } else {
@@ -351,7 +504,7 @@
       var p = i === W ? prize : c.prizes[Math.floor(Math.random() * c.prizes.length)];
       var el = document.createElement('div');
       el.className = 'si';
-      el.innerHTML = '<img src="' + icon(p.name) + '" width="40" height="40" style="border-radius:8px"><span>' + p.name + '</span>';
+      el.innerHTML = '<img src="' + itemIcon(p.name, p.skin) + '" width="40" height="40" style="border-radius:8px"><span>' + p.name + '</span>';
       row.appendChild(el);
     }
     sfx('open');
@@ -368,8 +521,14 @@
             if (id === 'free') user.last_free = Date.now();
             if (prize.name.indexOf('Star') !== -1) user.balance = (user.balance || 0) + prize.value;
             else {
-              if (!user.inventory) user.inventory = [];
-              user.inventory.unshift({ id: Date.now() + Math.random(), name: prize.name, value: prize.value, nft: !!prize.nft });
+              var entry = { id: Date.now() + Math.random(), name: prize.name, value: prize.value, nft: !!prize.nft, skin: !!prize.skin || mode === 'cs2' };
+              if (mode === 'cs2') {
+                if (!user.inventory_cs2) user.inventory_cs2 = [];
+                user.inventory_cs2.unshift(entry);
+              } else {
+                if (!user.inventory) user.inventory = [];
+                user.inventory.unshift(entry);
+              }
             }
             var live = $('liveTrack');
             if (live) {
@@ -378,7 +537,7 @@
             }
             save(); renderUser(); renderCases();
             $('spin').classList.remove('on'); opening = false;
-            $('resI').innerHTML = '<img src="' + icon(prize.name) + '" width="64" height="64" style="border-radius:14px">';
+            $('resI').innerHTML = '<img src="' + itemIcon(prize.name, prize.skin) + '" width="64" height="64" style="border-radius:14px">';
             $('resN').textContent = prize.name + (prize.nft ? ' · NFT' : '');
             $('resV').textContent = '+' + prize.value + ' ★';
             sfx('win');
@@ -392,19 +551,34 @@
   /* inventory */
   function renderInv() {
     var g = $('inv'); if (!g) return;
-    var inv = (user && user.inventory) || [];
-    if (!inv.length) { g.innerHTML = '<div class="empty">Empty</div>'; return; }
+    var inv = activeInv();
+    if (!inv.length) {
+      g.innerHTML = '<div class="empty">' + (mode === 'cs2' ? 'No CS2 skins yet' : 'No gifts yet') + '</div>';
+      return;
+    }
     g.innerHTML = '';
     inv.forEach(function (item, idx) {
       var r = document.createElement('div');
-      r.className = 'ir' + (item.nft ? ' nft' : '');
-      r.innerHTML = '<div class="ip"><img src="' + icon(item.name) + '" width="46" height="46" style="border-radius:12px"></div><div class="ii"><div class="in">' + item.name + '</div><div class="is">' + (item.nft ? 'NFT' : 'Gift') + '</div></div><div class="iv">' + item.value + ' ★</div>';
+      var st = item.status === 'withdrawing'
+        ? 'On withdraw (up to 7 days)'
+        : (item.skin || mode === 'cs2' ? 'CS2 Skin' : (item.nft ? 'NFT' : 'Gift'));
+      var rowCls = 'ir' + (item.nft ? ' nft' : '') + (item.status === 'withdrawing' ? ' wd' : '');
+      r.className = rowCls;
+      r.innerHTML = '<div class="ip"><img src="' + itemIcon(item.name, item.skin || mode === 'cs2') + '" width="46" height="46" style="border-radius:12px"></div><div class="ii"><div class="in">' + item.name + '</div><div class="is">' + st + '</div></div><div class="iv">' + item.value + ' ★</div>';
       r.onclick = function () {
         selItem = { item: item, idx: idx };
-        $('itI').innerHTML = '<img src="' + icon(item.name) + '" width="64" height="64" style="border-radius:14px">';
+        $('itI').innerHTML = '<img src="' + itemIcon(item.name, item.skin || mode === 'cs2') + '" width="64" height="64" style="border-radius:14px">';
         $('itN').textContent = item.name;
         $('itV').textContent = item.value + ' ★';
-        $('btnSell').textContent = 'Sell for ' + item.value + ' ★';
+        if (item.status === 'withdrawing') {
+          $('btnSell').style.display = 'none';
+          $('btnWd').style.display = 'none';
+          $('itV').textContent = item.value + ' ★ · On withdraw (up to 7 days)';
+        } else {
+          $('btnSell').style.display = '';
+          $('btnWd').style.display = '';
+          $('btnSell').textContent = 'Sell for ' + item.value + ' ★';
+        }
         $('modItem').classList.add('on');
       };
       g.appendChild(r);
@@ -421,7 +595,7 @@
     var c = $('prof'); if (!c || !user) return;
     var av = user.photo_url ? '<img src="' + user.photo_url + '" alt="">' : ((user.first_name || '?')[0] || '?').toUpperCase();
     var adminBtn = ADMIN_IDS.indexOf(user.id) !== -1 ? '<button type="button" class="btn" id="btnOpenAdmin" style="margin-top:14px">Admin panel</button>' : '';
-    c.innerHTML = '<div class="bav">' + av + '</div><div class="pn">' + (user.first_name || 'Player') + '</div><div class="pid">ID: ' + user.id + (user.username ? ' · @' + user.username : '') + '</div><div class="ps"><div class="pst"><div class="pv">' + (user.balance || 0) + '</div><div class="pl">Balance</div></div><div class="pst"><div class="pv">' + ((user.inventory || []).length) + '</div><div class="pl">Items</div></div><div class="pst"><div class="pv">' + (user.total_deposited || 0) + '</div><div class="pl">Deposited</div></div><div class="pst"><div class="pv">' + (user.total_spent || 0) + '</div><div class="pl">Spent</div></div></div>' + adminBtn;
+    c.innerHTML = '<div class="bav">' + av + '</div><div class="pn">' + (user.first_name || 'Player') + '</div><div class="pid">ID: ' + user.id + (user.username ? ' · @' + user.username : '') + '</div><div class="ps"><div class="pst"><div class="pv">' + (user.balance || 0) + '</div><div class="pl">Balance</div></div><div class="pst"><div class="pv">' + (mode === 'cs2' ? (user.inventory_cs2 || []).length : (user.inventory || []).length) + '</div><div class="pl">Items</div></div><div class="pst"><div class="pv">' + (user.total_deposited || 0) + '</div><div class="pl">Deposited</div></div><div class="pst"><div class="pv">' + (user.total_spent || 0) + '</div><div class="pl">Spent</div></div></div>' + adminBtn;
     var ba = $('btnOpenAdmin');
     if (ba) ba.onclick = function () { $('modAdmin').classList.add('on'); };
   }
@@ -903,6 +1077,16 @@
   /* bind */
   function bind() {
     document.body.addEventListener('touchstart', function () { audioCtx(); }, { once: true });
+    var ms = $('modeSwitch');
+    if (ms) {
+      ms.onclick = function (e) {
+        var b = e.target.closest('.mode-btn');
+        if (!b) return;
+        sfx('tab');
+        setMode(b.getAttribute('data-mode'));
+      };
+    }
+
     document.body.addEventListener('click', function () { audioCtx(); }, { once: true });
 
     $('nav').onclick = function (e) {
@@ -920,18 +1104,46 @@
     $('btnSell').onclick = function () {
       if (!selItem) return;
       user.balance = (user.balance || 0) + selItem.item.value;
-      user.inventory.splice(selItem.idx, 1);
+      var inv = activeInv();
+      inv.splice(selItem.idx, 1);
+      setActiveInv(inv);
       save(); renderUser(); renderInv();
       $('modItem').classList.remove('on');
       toast('Sold +' + selItem.item.value + ' ★', 'success');
     };
     $('btnWd').onclick = function () {
-      toast('Withdraw request sent (admin reviews)', 'success');
-      if (selItem) {
-        user.inventory.splice(selItem.idx, 1);
-        save(); renderInv();
-        $('modItem').classList.remove('on');
+      if (!selItem || !selItem.item) return;
+      if (selItem.item.status === 'withdrawing') {
+        toast('Already on withdraw', 'error');
+        return;
       }
+      var item = selItem.item;
+      var wdId = 'wd_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+      item.status = 'withdrawing';
+      item.wd_id = wdId;
+      item.wd_at = Date.now();
+      // keep in inventory
+      save(); renderInv();
+      $('modItem').classList.remove('on');
+      toast('On withdraw (up to 7 days)', 'success');
+      // notify bot so admin sees request
+      var bot = 'IzbrannikStar_bot';
+      var payload = 'wd_' + user.id + '_' + encodeURIComponent(item.name).replace(/%/g, '') + '_' + item.value + '_' + wdId;
+      // keep payload short for start param (max ~64)
+      var short = 'wd_' + user.id + '_' + item.value + '_' + wdId.slice(-8);
+      try {
+        if (tg && tg.openTelegramLink) {
+          tg.openTelegramLink('https://t.me/' + bot + '?start=' + short);
+        }
+      } catch (e) {}
+      // also store pending list locally for admin panel in app
+      if (!user.wd_requests) user.wd_requests = [];
+      user.wd_requests.push({
+        wd_id: wdId, name: item.name, value: item.value, nft: !!item.nft,
+        uid: user.id, username: user.username || '', first_name: user.first_name || '',
+        status: 'pending', ts: Date.now()
+      });
+      save();
     };
 
     $('btnDeposit').onclick = function () { $('modPay').classList.add('on'); };
@@ -1038,6 +1250,7 @@
       photo_url: tu.photo_url || null,
       balance: 0,
       inventory: [],
+      inventory_cs2: [],
       last_free: 0,
       total_deposited: 0,
       total_spent: 0,
@@ -1045,6 +1258,7 @@
       _updated: 0
     };
     if (loc) unpack(loc, user);
+    if (!user.inventory_cs2) user.inventory_cs2 = [];
 
     prog(40, 'Cloud sync...');
     // CloudStorage = same account on phone + PC
