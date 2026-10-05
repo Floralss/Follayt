@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Izbrannik Gift</title>
+  <title>Izbrannik Star</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
@@ -16,13 +16,22 @@
         <div class="avatar" id="avatar">?</div>
         <div class="user-info">
           <div class="username" id="username">Загрузка...</div>
-          <div class="balance"><span id="balanceStars">0</span> ⭐</div>
+          <div class="balance">
+            <svg class="star-icon" viewBox="0 0 24 24" width="14" height="14"><path fill="#f0c14b" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span id="balanceStars">0</span>
+          </div>
         </div>
       </div>
       <div class="header-actions">
-        <button class="btn-icon" id="btnDeposit">+</button>
-        <button class="btn-icon" id="btnInventory">🎒</button>
-        <button class="btn-icon" id="btnAdmin" style="display:none">👑</button>
+        <button class="btn-icon" id="btnDeposit" title="Пополнить">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="btn-icon" id="btnInventory" title="Инвентарь">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+        <button class="btn-icon" id="btnAdmin" style="display:none" title="Админ">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.2H22l-6 4.8 2.3 7L12 16.4 5.7 21l2.3-7-6-4.8h7.6z"/></svg>
+        </button>
       </div>
     </header>
 
@@ -37,46 +46,93 @@
         <h2 class="section-title">Кейсы</h2>
         <div class="cases-grid" id="casesGrid"></div>
       </section>
+
       <section id="tab-games" class="tab">
         <h2 class="section-title">Игры</h2>
         <div class="games-list">
           <div class="game-card" data-game="roulette">
-            <div class="game-icon">🎰</div>
-            <div class="game-info"><div class="game-name">Рулетка</div><div class="game-desc">Красное / Чёрное / Зелёное</div></div>
+            <div class="game-icon gi-roulette">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>
+            </div>
+            <div class="game-info">
+              <div class="game-name">Рулетка</div>
+              <div class="game-desc">Красное / Чёрное / Зелёное</div>
+            </div>
             <button class="btn-play">Играть</button>
           </div>
           <div class="game-card" data-game="upgrade">
-            <div class="game-icon">⬆️</div>
-            <div class="game-info"><div class="game-name">Апгрейд</div><div class="game-desc">Увеличь ставку</div></div>
+            <div class="game-icon gi-upgrade">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            </div>
+            <div class="game-info">
+              <div class="game-name">Апгрейд</div>
+              <div class="game-desc">Увеличь ставку</div>
+            </div>
             <button class="btn-play">Играть</button>
           </div>
           <div class="game-card" data-game="crash">
-            <div class="game-icon">🚀</div>
-            <div class="game-info"><div class="game-name">Краш</div><div class="game-desc">Выйди вовремя</div></div>
+            <div class="game-icon gi-crash">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 4 3 6-8"/><path d="M15 7h4v4"/></svg>
+            </div>
+            <div class="game-info">
+              <div class="game-name">Краш</div>
+              <div class="game-desc">Выйди вовремя</div>
+            </div>
             <button class="btn-play">Играть</button>
           </div>
         </div>
       </section>
+
       <section id="tab-inventory" class="tab">
         <h2 class="section-title">Инвентарь</h2>
-        <div class="inventory-grid" id="inventoryGrid"><div class="empty-state">Пока пусто</div></div>
+        <div class="inventory-grid" id="inventoryGrid">
+          <div class="empty-state">Пока пусто</div>
+        </div>
       </section>
     </main>
 
+    <!-- Case detail (preview prizes) -->
+    <div class="modal" id="modalCase">
+      <div class="modal-content case-modal">
+        <button class="modal-close" id="btnCloseCase">✕</button>
+        <div class="case-modal-header">
+          <div class="case-modal-icon" id="caseModalIcon"></div>
+          <div>
+            <div class="case-modal-name" id="caseModalName">Кейс</div>
+            <div class="case-modal-desc" id="caseModalDesc"></div>
+          </div>
+        </div>
+        <div class="case-modal-price" id="caseModalPrice"></div>
+        <div class="prizes-title">Что может выпасть</div>
+        <div class="prizes-list" id="prizesList"></div>
+        <button class="btn-primary btn-open-case" id="btnOpenCase" disabled>Открыть</button>
+      </div>
+    </div>
+
+    <!-- Opening animation -->
     <div class="open-overlay" id="openOverlay">
-      <div class="open-box">🎁</div>
+      <div class="open-box">
+        <svg viewBox="0 0 64 64" width="72" height="72">
+          <rect x="8" y="24" width="48" height="32" rx="4" fill="#7c5cff"/>
+          <rect x="4" y="18" width="56" height="12" rx="3" fill="#9b7fff"/>
+          <rect x="28" y="18" width="8" height="38" fill="#f0c14b"/>
+          <path d="M20 18 Q32 6 44 18" fill="none" stroke="#f0c14b" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div class="open-text">Открываем...</div>
     </div>
 
+    <!-- Prize result -->
     <div class="modal" id="modalResult">
       <div class="modal-content">
-        <div class="prize-image" id="prizeImage">🎁</div>
+        <div class="prize-badge" id="prizeBadge"></div>
         <div class="prize-name" id="prizeName">Приз</div>
-        <div class="prize-value" id="prizeValue">0 ⭐</div>
+        <div class="prize-value" id="prizeValue">0</div>
         <button class="btn-primary" id="btnCloseResult">Отлично</button>
       </div>
     </div>
 
+    <!-- Game modal -->
     <div class="modal" id="modalGame">
       <div class="modal-content game-modal">
         <button class="modal-close" id="btnCloseGame">✕</button>
@@ -85,18 +141,27 @@
       </div>
     </div>
 
+    <!-- Deposit -->
     <div class="modal" id="modalDeposit">
       <div class="modal-content">
         <button class="modal-close" id="btnCloseDeposit">✕</button>
-        <h3>Пополнение</h3>
+        <h3>Пополнение звёздами</h3>
+        <p class="deposit-hint">Минимум 10 звёзд</p>
         <div class="game-form" style="margin-top:12px">
           <label>Сумма</label>
           <input type="number" id="depositAmount" value="100" min="10"/>
+          <div class="deposit-presets">
+            <button class="preset" data-amt="50">50</button>
+            <button class="preset" data-amt="100">100</button>
+            <button class="preset" data-amt="250">250</button>
+            <button class="preset" data-amt="500">500</button>
+          </div>
           <button class="btn-primary" id="btnDoDeposit">Пополнить</button>
         </div>
       </div>
     </div>
 
+    <!-- Admin -->
     <div class="modal" id="modalAdmin">
       <div class="modal-content game-modal">
         <button class="modal-close" id="btnCloseAdmin">✕</button>
