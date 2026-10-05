@@ -6,47 +6,12 @@
     try { tg.ready(); tg.expand(); tg.setHeaderColor('#08080d'); tg.setBackgroundColor('#08080d'); } catch (e) {}
   }
 
-  var PROJECT = 'custom-graphics-36c50';
   var ADMIN_IDS = [8133917568, 5198310704];
-  var LS = 'iz_v5_';
-  var user = null, db = null, uref = null, opening = false, selCase = null, selItem = null;
+  var LS = 'iz_v6_';
+  var CS_KEY = 'iz_user_v6';
+  var user = null, opening = false, selCase = null, selItem = null;
 
   function $(id) { return document.getElementById(id); }
-
-  /* ===== Sounds (Web Audio, no files needed) ===== */
-  var _actx = null;
-  function audioCtx() {
-    if (!_actx) {
-      try { _actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
-    }
-    if (_actx.state === 'suspended') _actx.resume();
-    return _actx;
-  }
-  function beep(freq, dur, type, vol, delay) {
-    try {
-      var ctx = audioCtx(); if (!ctx) return;
-      var t0 = ctx.currentTime + (delay || 0);
-      var o = ctx.createOscillator();
-      var g = ctx.createGain();
-      o.type = type || 'sine';
-      o.frequency.value = freq;
-      g.gain.setValueAtTime((vol || 0.08), t0);
-      g.gain.exponentialRampToValueAtTime(0.001, t0 + (dur || 0.1));
-      o.connect(g); g.connect(ctx.destination);
-      o.start(t0); o.stop(t0 + (dur || 0.1) + 0.02);
-    } catch (e) {}
-  }
-  function sfx(name) {
-    if (name === 'click') beep(600, 0.04, 'square', 0.04);
-    else if (name === 'open') { beep(300, 0.08, 'triangle', 0.06); beep(450, 0.1, 'triangle', 0.05, 0.08); }
-    else if (name === 'spin') beep(200 + Math.random() * 400, 0.05, 'sawtooth', 0.03);
-    else if (name === 'win') { beep(523, 0.12, 'sine', 0.1); beep(659, 0.12, 'sine', 0.1, 0.12); beep(784, 0.2, 'sine', 0.12, 0.24); }
-    else if (name === 'lose') { beep(200, 0.15, 'sawtooth', 0.06); beep(150, 0.2, 'sawtooth', 0.05, 0.12); }
-    else if (name === 'dig') beep(80 + Math.random() * 40, 0.06, 'triangle', 0.08);
-    else if (name === 'tab') beep(500, 0.03, 'sine', 0.03);
-  }
-
-
   function toast(m, t) {
     var el = $('toast'); if (!el) return;
     el.textContent = m; el.className = 'toast on ' + (t === 'error' ? 'err' : t === 'success' ? 'ok' : '');
@@ -57,100 +22,104 @@
     return { id: 999001, first_name: 'Test', username: 'test', photo_url: null };
   }
 
-  /* ===== Prize icons (emoji) + Russian names ===== */
-  var EMOJI = {
-    '1 ★': '⭐', '2 ★': '⭐', '5 ★': '🌟', 'Звезда': '🌟',
-    'Сердце': '❤️', 'Роза': '🌹', 'Мишка': '🧸', 'Торт': '🎂', 'Подарок': '🎁',
-    'Алмаз': '💎', 'Кольцо': '💍',
-    'Мороженое': '🍦', 'Статуя Свободы': '🗽', 'Крутой пёс': '🐶',
-    'Лапша': '🍜', 'Юла': '🪀', 'Леденец': '🍭', 'Фонарь': '🏮',
-    'Фламинго': '🦩', 'Рюкзак': '🎒', 'Носок': '🧦', 'Снеговик': '⛄',
-    'Капкейк': '🧁', 'Мешок конфет': '🍬', 'Какашка': '💩', 'Клевер': '🍀',
-    'Леденец-трость': '🍬', 'Коробка': '🎀', 'Торт с вишней': '🍰',
-    'Змея': '🐍', 'Пряничное сердце': '🍪', 'Кролик': '🐰',
-    'Полумесяц': '🌙', 'День рождения': '🎂', 'Шут': '🃏',
-    'Медаль': '🏅', 'Бенгальский огонь': '✨', 'Букет денег': '💸',
-    'Световой меч': '⚔️', 'Книга магии': '📖', 'Клавиша любви': '💜',
-    'Облигация': '📜', 'Пряник': '🍪', 'Ракета': '🚀', 'Шпион-обезьяна': '🐵',
-    'Плюшевый Пепе': '🐸', 'Кепка Дурова': '🧢', 'Шампанское': '🍾',
-    'Деревянная кирка': '⛏', 'Каменная кирка': '⛏', 'Железная кирка': '⛏',
-    'Золотая кирка': '⛏', 'Алмазная кирка': '⛏'
-  };
-  function em(n) { return EMOJI[n] || '🎁'; }
+  /* sounds */
+  var _actx = null;
+  function audioCtx() {
+    if (!_actx) { try { _actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+    if (_actx.state === 'suspended') _actx.resume();
+    return _actx;
+  }
+  function beep(freq, dur, type, vol, delay) {
+    try {
+      var ctx = audioCtx(); if (!ctx) return;
+      var t0 = ctx.currentTime + (delay || 0);
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type || 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol || 0.08, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + (dur || 0.1));
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0); o.stop(t0 + (dur || 0.1) + 0.02);
+    } catch (e) {}
+  }
+  function sfx(n) {
+    if (n === 'click' || n === 'tab') beep(500, 0.03, 'sine', 0.03);
+    else if (n === 'open') { beep(300, 0.08, 'triangle', 0.06); beep(450, 0.1, 'triangle', 0.05, 0.08); }
+    else if (n === 'win') { beep(523, 0.1, 'sine', 0.1); beep(659, 0.1, 'sine', 0.1, 0.1); beep(784, 0.18, 'sine', 0.12, 0.2); }
+    else if (n === 'lose') { beep(200, 0.15, 'sawtooth', 0.05); }
+    else if (n === 'dig') beep(90, 0.05, 'triangle', 0.07);
+  }
 
-  /* ===== Cases ===== */
+  function icon(name) {
+    if (window.giftIcon) return window.giftIcon(name);
+    return '';
+  }
+
+  /* ===== CASES (English, TG prices) ===== */
   var CASES = {
     free: {
-      id: 'free', name: 'Фри', price: 0, desc: 'Раз в 24 часа', cls: 'free', art: '🎁',
+      id: 'free', name: 'Free', price: 0, desc: 'Once every 24h', cls: 'free', art: 'F',
       prizes: [
-        { name: '1 ★', value: 1, chance: 55, nft: false },
-        { name: '2 ★', value: 2, chance: 35, nft: false },
-        { name: '5 ★', value: 5, chance: 6, nft: false },
-        { name: 'Сердце', value: 15, chance: 1.5, nft: false },
-        { name: 'Капкейк', value: 460, chance: 0.8, nft: true },
-        { name: 'Снеговик', value: 490, chance: 0.6, nft: true },
-        { name: 'Носок', value: 500, chance: 0.5, nft: true },
-        { name: 'Фламинго', value: 510, chance: 0.4, nft: true },
-        { name: 'Мороженое', value: 505, chance: 0.2, nft: true }
+        { name: '1 Star', value: 1, chance: 55 },
+        { name: '2 Stars', value: 2, chance: 30 },
+        { name: '5 Stars', value: 5, chance: 8 },
+        { name: 'Teddy Bear', value: 15, chance: 3.5 },
+        { name: 'Heart', value: 15, chance: 2 },
+        { name: 'Cupcake', value: 460, chance: 0.7, nft: true },
+        { name: 'Snowman', value: 490, chance: 0.5, nft: true },
+        { name: 'Flamingo', value: 510, chance: 0.3, nft: true }
       ]
     },
     cheap: {
-      id: 'cheap', name: 'Дешёвый', price: 15, desc: 'Обычные + маркет NFT', cls: 'cheap', art: '📦',
+      id: 'cheap', name: 'Starter', price: 15, desc: 'Classic gifts + NFT', cls: 'cheap', art: 'S',
       prizes: [
-        { name: 'Сердце', value: 10, chance: 26, nft: false },
-        { name: 'Роза', value: 15, chance: 22, nft: false },
-        { name: 'Мишка', value: 25, chance: 16, nft: false },
-        { name: 'Торт', value: 40, chance: 10, nft: false },
-        { name: 'Звезда', value: 50, chance: 8, nft: false },
-        { name: 'Капкейк', value: 460, chance: 4, nft: true },
-        { name: 'Снеговик', value: 490, chance: 3.5, nft: true },
-        { name: 'Носок', value: 500, chance: 3, nft: true },
-        { name: 'Коробка', value: 500, chance: 2.5, nft: true },
-        { name: 'Фламинго', value: 510, chance: 2, nft: true },
-        { name: 'Леденец-трость', value: 510, chance: 1.5, nft: true },
-        { name: 'Лапша', value: 513, chance: 1, nft: true },
-        { name: 'Юла', value: 530, chance: 0.5, nft: true }
+        { name: 'Teddy Bear', value: 15, chance: 28 },
+        { name: 'Heart', value: 15, chance: 22 },
+        { name: 'Rose', value: 25, chance: 18 },
+        { name: 'Gift Box', value: 25, chance: 12 },
+        { name: 'Cake', value: 50, chance: 8 },
+        { name: 'Bouquet', value: 50, chance: 5 },
+        { name: 'Cupcake', value: 460, chance: 3, nft: true },
+        { name: 'Snowman', value: 490, chance: 2, nft: true },
+        { name: 'Socks', value: 500, chance: 1.2, nft: true },
+        { name: 'Flamingo', value: 510, chance: 0.8, nft: true }
       ]
     },
     selected: {
-      id: 'selected', name: 'Избранный', price: 100, desc: 'Маркет NFT 500–700 ★', cls: 'sel', art: '👑',
+      id: 'selected', name: 'Select', price: 100, desc: 'Market NFT 460-700', cls: 'sel', art: 'E',
       prizes: [
-        { name: 'Капкейк', value: 460, chance: 12, nft: true },
-        { name: 'Снеговик', value: 490, chance: 11, nft: true },
-        { name: 'Носок', value: 500, chance: 10, nft: true },
-        { name: 'Фламинго', value: 510, chance: 9, nft: true },
-        { name: 'Леденец', value: 544, chance: 8, nft: true },
-        { name: 'Змея', value: 549, chance: 7, nft: true },
-        { name: 'Шут', value: 550, chance: 6, nft: true },
-        { name: 'Бенгальский огонь', value: 587, chance: 6, nft: true },
-        { name: 'Облигация', value: 590, chance: 5, nft: true },
-        { name: 'Какашка', value: 599, chance: 4, nft: true },
-        { name: 'Рюкзак', value: 600, chance: 4, nft: true },
-        { name: 'Пряник', value: 610, chance: 3, nft: true },
-        { name: 'Пряничное сердце', value: 626, chance: 3, nft: true },
-        { name: 'Ракета', value: 650, chance: 2.5, nft: true },
-        { name: 'Медаль', value: 655, chance: 2, nft: true },
-        { name: 'Фонарь', value: 666, chance: 1.5, nft: true },
-        { name: 'Статуя Свободы', value: 690, chance: 1, nft: true }
+        { name: 'Cupcake', value: 460, chance: 12, nft: true },
+        { name: 'Snowman', value: 490, chance: 11, nft: true },
+        { name: 'Socks', value: 500, chance: 10, nft: true },
+        { name: 'Ice Cream', value: 505, chance: 9, nft: true },
+        { name: 'Flamingo', value: 510, chance: 8, nft: true },
+        { name: 'Lollipop', value: 544, chance: 7, nft: true },
+        { name: 'Snake', value: 549, chance: 6, nft: true },
+        { name: 'Jester', value: 550, chance: 6, nft: true },
+        { name: 'Sparkler', value: 587, chance: 5, nft: true },
+        { name: 'Bond', value: 590, chance: 5, nft: true },
+        { name: 'Backpack', value: 600, chance: 4, nft: true },
+        { name: 'Gingerbread', value: 610, chance: 4, nft: true },
+        { name: 'Rocket', value: 650, chance: 3, nft: true },
+        { name: 'Medal', value: 655, chance: 2.5, nft: true },
+        { name: 'Lantern', value: 666, chance: 2, nft: true },
+        { name: 'Liberty', value: 690, chance: 1.5, nft: true }
       ]
     },
     vip: {
-      id: 'vip', name: 'VIP', price: 250, desc: 'Редкие маркет NFT', cls: 'vip', art: '💎',
+      id: 'vip', name: 'VIP', price: 250, desc: 'Rare market NFT', cls: 'vip', art: 'V',
       prizes: [
-        { name: 'Торт с вишней', value: 700, chance: 14, nft: true },
-        { name: 'Крутой пёс', value: 709, chance: 12, nft: true },
-        { name: 'Букет денег', value: 710, chance: 11, nft: true },
-        { name: 'Клевер', value: 721, chance: 10, nft: true },
-        { name: 'Кролик', value: 721, chance: 9, nft: true },
-        { name: 'Полумесяц', value: 721, chance: 8, nft: true },
-        { name: 'День рождения', value: 721, chance: 8, nft: true },
-        { name: 'Клавиша любви', value: 721, chance: 7, nft: true },
-        { name: 'Световой меч', value: 721, chance: 6, nft: true },
-        { name: 'Шпион-обезьяна', value: 814, chance: 5, nft: true },
-        { name: 'Плюшевый Пепе', value: 900, chance: 4, nft: true },
-        { name: 'Кепка Дурова', value: 1000, chance: 3, nft: true },
-        { name: 'Книга магии', value: 600, chance: 2, nft: true },
-        { name: 'Шампанское', value: 1200, chance: 1, nft: true }
+        { name: 'Cherry Cake', value: 700, chance: 14, nft: true },
+        { name: 'Cool Dog', value: 709, chance: 12, nft: true },
+        { name: 'Money Bouquet', value: 710, chance: 11, nft: true },
+        { name: 'Clover', value: 721, chance: 10, nft: true },
+        { name: 'Bunny', value: 721, chance: 9, nft: true },
+        { name: 'Light Sword', value: 721, chance: 8, nft: true },
+        { name: 'Spy Ape', value: 814, chance: 7, nft: true },
+        { name: 'Pepe Plush', value: 900, chance: 6, nft: true },
+        { name: 'Durov Cap', value: 1000, chance: 5, nft: true },
+        { name: 'Magic Book', value: 600, chance: 4, nft: true },
+        { name: 'Champagne', value: 50, chance: 8 },
+        { name: 'Diamond', value: 100, chance: 6 }
       ]
     }
   };
@@ -163,63 +132,108 @@
     return prizes[prizes.length - 1];
   }
 
-  /* ===== Storage ===== */
-  function saveLocal() {
-    if (!user) return;
-    try {
-      localStorage.setItem(LS + user.id, JSON.stringify({
-        balance: user.balance || 0, inventory: user.inventory || [],
-        last_free: user.last_free || 0, total_deposited: user.total_deposited || 0,
-        total_spent: user.total_spent || 0
-      }));
-    } catch (e) {}
-  }
-  function loadLocal(id) {
-    try { var r = localStorage.getItem(LS + id); return r ? JSON.parse(r) : null; } catch (e) { return null; }
-  }
-  function save() {
-    saveLocal();
-    if (!uref) return;
-    uref.set({
-      id: user.id, first_name: user.first_name || '', username: user.username || '',
-      photo_url: user.photo_url || null, balance: user.balance || 0,
-      inventory: user.inventory || [], last_free: user.last_free || 0,
-      total_deposited: user.total_deposited || 0, total_spent: user.total_spent || 0,
-      last_active: Date.now(), online: true
-    }, { merge: true }).catch(function () {});
+  /* ===== SYNC: CloudStorage (cross-device) + localStorage ===== */
+  function pack() {
+    return JSON.stringify({
+      balance: user.balance || 0,
+      inventory: user.inventory || [],
+      last_free: user.last_free || 0,
+      total_deposited: user.total_deposited || 0,
+      total_spent: user.total_spent || 0,
+      stats: user.stats || {},
+      updated_at: Date.now()
+    });
   }
 
-  function applyServer(d) {
-    if (!d || !user) return;
-    var old = user.balance || 0;
-    if (typeof d.balance === 'number') user.balance = d.balance;
-    if (typeof d.pending_credit === 'number' && d.pending_credit !== 0) {
-      var add = d.pending_credit;
-      user.balance = (user.balance || 0) + add;
-      uref.update({ pending_credit: 0, balance: user.balance }).catch(function () {});
-      toast('Начислено +' + add + ' ★', 'success');
-    } else if (user.balance !== old && user.balance > old) {
-      toast('Баланс: ' + user.balance + ' ★', 'success');
-    }
-    if (Array.isArray(d.inventory)) user.inventory = d.inventory;
-    if (typeof d.last_free === 'number') user.last_free = d.last_free;
-    if (typeof d.total_deposited === 'number') user.total_deposited = d.total_deposited;
-    if (typeof d.total_spent === 'number') user.total_spent = d.total_spent;
+  function unpack(raw, into) {
+    try {
+      var d = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      if (!d || typeof d !== 'object') return into;
+      if (typeof d.balance === 'number') into.balance = d.balance;
+      if (Array.isArray(d.inventory)) into.inventory = d.inventory;
+      if (typeof d.last_free === 'number') into.last_free = d.last_free;
+      if (typeof d.total_deposited === 'number') into.total_deposited = d.total_deposited;
+      if (typeof d.total_spent === 'number') into.total_spent = d.total_spent;
+      if (d.stats) into.stats = d.stats;
+      into._updated = d.updated_at || 0;
+      return into;
+    } catch (e) { return into; }
+  }
+
+  function saveLocal() {
+    if (!user) return;
+    try { localStorage.setItem(LS + user.id, pack()); } catch (e) {}
+  }
+
+  function loadLocal(id) {
+    try {
+      var r = localStorage.getItem(LS + id);
+      return r ? JSON.parse(r) : null;
+    } catch (e) { return null; }
+  }
+
+  function cloudSave(cb) {
     saveLocal();
-    renderUser();
-    try { renderCases(); } catch (e) {}
+    if (!tg || !tg.CloudStorage) { if (cb) cb(false); return; }
+    try {
+      tg.CloudStorage.setItem(CS_KEY, pack(), function (err) {
+        if (cb) cb(!err);
+      });
+    } catch (e) { if (cb) cb(false); }
+  }
+
+  function cloudLoad(cb) {
+    if (!tg || !tg.CloudStorage) { cb(null); return; }
+    try {
+      tg.CloudStorage.getItem(CS_KEY, function (err, val) {
+        if (err || !val) { cb(null); return; }
+        try { cb(JSON.parse(val)); } catch (e) { cb(null); }
+      });
+    } catch (e) { cb(null); }
+  }
+
+  function save() {
+    saveLocal();
+    cloudSave();
+  }
+
+  function applyDeepLink() {
+    var bal = null, free = false;
+    try {
+      var q = new URLSearchParams(window.location.search || '');
+      if (q.get('sync')) bal = parseInt(q.get('sync'), 10);
+      if (q.get('free') === '1') free = true;
+    } catch (e) {}
+    try {
+      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+        var sp = String(tg.initDataUnsafe.start_param);
+        if (sp.indexOf('sync_') === 0) bal = parseInt(sp.slice(5), 10);
+        if (sp === 'free_ok') free = true;
+      }
+    } catch (e) {}
+    if (!user) return;
+    if (typeof bal === 'number' && !isNaN(bal) && bal >= 0) {
+      user.balance = bal;
+      toast('Balance synced: ' + bal + ' Stars', 'success');
+      sfx('win');
+    }
+    if (free) {
+      user.last_free = 0;
+      toast('Free case ready!', 'success');
+    }
+    save();
   }
 
   function renderUser() {
     if (!user) return;
-    $('username').textContent = user.first_name || 'Игрок';
+    $('username').textContent = user.first_name || 'Player';
     $('balanceStars').textContent = (user.balance || 0).toLocaleString();
     var av = $('avatar');
     if (user.photo_url) av.innerHTML = '<img src="' + user.photo_url + '" alt="">';
     else av.textContent = ((user.first_name || '?')[0] || '?').toUpperCase();
   }
 
-  /* ===== Tabs ===== */
+  /* tabs */
   function tab(name) {
     document.querySelectorAll('.nb').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-t') === name); });
     document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('on', t.id === 'tab-' + name); });
@@ -228,7 +242,7 @@
     if (name === 'profile') renderProf();
   }
 
-  /* ===== Cases ===== */
+  /* cases */
   function renderCases() {
     var g = $('casesGrid'); if (!g || !user) return;
     g.innerHTML = '';
@@ -239,8 +253,8 @@
         var left = (user.last_free || 0) + 86400000 - now;
         if (left > 0) {
           var h = Math.floor(left / 3600000), m = Math.floor((left % 3600000) / 60000);
-          ph = '<div class="cp w">' + h + 'ч ' + m + 'м</div>';
-        } else ph = '<div class="cp f">Бесплатно</div>';
+          ph = '<div class="cp w">' + h + 'h ' + m + 'm</div>';
+        } else ph = '<div class="cp f">Free</div>';
       } else ph = '<div class="cp">' + c.price + ' ★</div>';
       var el = document.createElement('div');
       el.className = 'cc';
@@ -255,27 +269,27 @@
     selCase = id;
     $('cpN').textContent = c.name;
     $('cpD').textContent = c.desc;
-    $('cpArt').textContent = c.art;
+    $('cpArt').innerHTML = c.prizes[0] ? '<img src="' + icon(c.prizes[0].name) + '" width="48" height="48" style="border-radius:12px">' : c.art;
     var now = Date.now(), pr = $('cpPr'), btn = $('btnOpen'), ok = true;
     if (c.id === 'free') {
       var left = (user.last_free || 0) + 86400000 - now;
       if (left > 0) {
         ok = false;
         var h = Math.floor(left / 3600000), m = Math.floor((left % 3600000) / 60000);
-        pr.className = 'cp-pr w'; pr.textContent = 'Через ' + h + 'ч ' + m + 'м';
-        btn.textContent = 'Недоступно';
-      } else { pr.className = 'cp-pr f'; pr.textContent = 'Бесплатно'; btn.textContent = 'Открыть бесплатно'; }
+        pr.className = 'cp-pr w'; pr.textContent = 'In ' + h + 'h ' + m + 'm';
+        btn.textContent = 'Unavailable';
+      } else { pr.className = 'cp-pr f'; pr.textContent = 'Free'; btn.textContent = 'Open free'; }
     } else {
       pr.className = 'cp-pr'; pr.textContent = c.price + ' ★';
-      if ((user.balance || 0) < c.price) { ok = false; btn.textContent = 'Недостаточно ★'; }
-      else btn.textContent = 'Открыть за ' + c.price + ' ★';
+      if ((user.balance || 0) < c.price) { ok = false; btn.textContent = 'Not enough Stars'; }
+      else btn.textContent = 'Open for ' + c.price + ' ★';
     }
     btn.disabled = !ok;
     var list = $('cpList'); list.innerHTML = '';
     c.prizes.slice().sort(function (a, b) { return b.chance - a.chance; }).forEach(function (p) {
       var row = document.createElement('div');
       row.className = 'pr' + (p.nft ? ' nft' : '');
-      row.innerHTML = '<div class="pp">' + em(p.name) + '</div><div class="pi"><div class="pn2">' + p.name + (p.nft ? ' · NFT' : '') + '</div><div class="pc">' + p.chance + '%</div></div><div class="pv2">' + p.value + ' ★</div>';
+      row.innerHTML = '<div class="pp"><img src="' + icon(p.name) + '" width="36" height="36" style="border-radius:8px"></div><div class="pi"><div class="pn2">' + p.name + (p.nft ? ' · NFT' : '') + '</div><div class="pc">' + p.chance + '%</div></div><div class="pv2">' + p.value + ' ★</div>';
       list.appendChild(row);
     });
     $('shCase').classList.add('on');
@@ -285,9 +299,9 @@
     if (opening) return;
     var c = CASES[id]; if (!c) return;
     if (id === 'free') {
-      if (Date.now() < (user.last_free || 0) + 86400000) { toast('Фри ещё не готов', 'error'); return; }
+      if (Date.now() < (user.last_free || 0) + 86400000) { toast('Free not ready', 'error'); return; }
     } else {
-      if ((user.balance || 0) < c.price) { toast('Недостаточно ★', 'error'); return; }
+      if ((user.balance || 0) < c.price) { toast('Not enough Stars', 'error'); return; }
       user.balance -= c.price;
       user.total_spent = (user.total_spent || 0) + c.price;
     }
@@ -300,54 +314,60 @@
       var p = i === W ? prize : c.prizes[Math.floor(Math.random() * c.prizes.length)];
       var el = document.createElement('div');
       el.className = 'si';
-      el.innerHTML = '<div class="e">' + em(p.name) + '</div><span>' + p.name + '</span>';
+      el.innerHTML = '<img src="' + icon(p.name) + '" width="40" height="40" style="border-radius:8px"><span>' + p.name + '</span>';
       row.appendChild(el);
     }
-    sfx('open'); $('spin').classList.add('on');
+    sfx('open');
+    $('spin').classList.add('on');
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         var iw = 80, mid = Math.min(window.innerWidth, 480) / 2;
         var tx = -(W * iw - mid + iw / 2 + (Math.random() - 0.5) * 20);
-        row.style.transition = 'transform 4s cubic-bezier(0.12,0.75,0.12,1)';
+        row.style.transition = 'transform 3.2s cubic-bezier(0.12,0.75,0.12,1)';
         row.style.transform = 'translateX(' + tx + 'px)';
         setTimeout(function () {
           if (row.children[W]) row.children[W].classList.add('win');
           setTimeout(function () {
             if (id === 'free') user.last_free = Date.now();
-            if (prize.name.indexOf('★') !== -1) user.balance = (user.balance || 0) + prize.value;
+            if (prize.name.indexOf('Star') !== -1) user.balance = (user.balance || 0) + prize.value;
             else {
               if (!user.inventory) user.inventory = [];
               user.inventory.unshift({ id: Date.now() + Math.random(), name: prize.name, value: prize.value, nft: !!prize.nft });
             }
-            if (db) db.collection('drops').add({ uid: user.id, name: user.first_name || 'Игрок', prize: prize.name, value: prize.value, ts: Date.now() }).catch(function () {});
+            var live = $('liveTrack');
+            if (live) {
+              var s = '<span><b>' + (user.first_name || 'Player') + '</b> → ' + prize.name + ' <span class="lv">' + prize.value + '★</span> · </span>';
+              live.innerHTML = s + (live.innerHTML || '');
+            }
             save(); renderUser(); renderCases();
             $('spin').classList.remove('on'); opening = false;
-            $('resI').textContent = em(prize.name);
+            $('resI').innerHTML = '<img src="' + icon(prize.name) + '" width="64" height="64" style="border-radius:14px">';
             $('resN').textContent = prize.name + (prize.nft ? ' · NFT' : '');
             $('resV').textContent = '+' + prize.value + ' ★';
-            sfx('win'); $('modRes').classList.add('on');
-          }, 500);
-        }, 4100);
+            sfx('win');
+            $('modRes').classList.add('on');
+          }, 400);
+        }, 3300);
       });
     });
   }
 
-  /* ===== Inventory ===== */
+  /* inventory */
   function renderInv() {
     var g = $('inv'); if (!g) return;
     var inv = (user && user.inventory) || [];
-    if (!inv.length) { g.innerHTML = '<div class="empty">Пока пусто</div>'; return; }
+    if (!inv.length) { g.innerHTML = '<div class="empty">Empty</div>'; return; }
     g.innerHTML = '';
     inv.forEach(function (item, idx) {
       var r = document.createElement('div');
       r.className = 'ir' + (item.nft ? ' nft' : '');
-      r.innerHTML = '<div class="ip">' + em(item.name) + '</div><div class="ii"><div class="in">' + item.name + '</div><div class="is">' + (item.nft ? 'NFT' : 'Подарок') + '</div></div><div class="iv">' + item.value + ' ★</div>';
+      r.innerHTML = '<div class="ip"><img src="' + icon(item.name) + '" width="46" height="46" style="border-radius:12px"></div><div class="ii"><div class="in">' + item.name + '</div><div class="is">' + (item.nft ? 'NFT' : 'Gift') + '</div></div><div class="iv">' + item.value + ' ★</div>';
       r.onclick = function () {
         selItem = { item: item, idx: idx };
-        $('itI').textContent = em(item.name);
+        $('itI').innerHTML = '<img src="' + icon(item.name) + '" width="64" height="64" style="border-radius:14px">';
         $('itN').textContent = item.name;
         $('itV').textContent = item.value + ' ★';
-        $('btnSell').textContent = 'Продать за ' + item.value + ' ★';
+        $('btnSell').textContent = 'Sell for ' + item.value + ' ★';
         $('modItem').classList.add('on');
       };
       g.appendChild(r);
@@ -355,307 +375,531 @@
   }
 
   function renderLb() {
-    var box = $('lb'); if (!box) return;
-    box.innerHTML = '<div class="empty">Загрузка...</div>';
-    if (!db) { box.innerHTML = '<div class="empty">Нет связи</div>'; return; }
-    db.collection('users').limit(50).get().then(function (snap) {
-      var arr = [];
-      snap.forEach(function (doc) { var d = doc.data(); arr.push({ name: d.first_name || 'Игрок', photo: d.photo_url, spent: d.total_spent || 0 }); });
-      arr.sort(function (a, b) { return b.spent - a.spent; });
-      arr = arr.filter(function (x) { return x.spent > 0; }).slice(0, 20);
-      if (!arr.length) { box.innerHTML = '<div class="empty">Пока пусто</div>'; return; }
-      box.innerHTML = '';
-      arr.forEach(function (d, i) {
-        var r = document.createElement('div');
-        r.className = 'lr' + (i < 3 ? ' t' + (i + 1) : '');
-        var av = d.photo ? '<img src="' + d.photo + '" alt="">' : (d.name[0] || '?').toUpperCase();
-        r.innerHTML = '<div class="lrank">' + (i + 1) + '</div><div class="lav">' + av + '</div><div class="linfo"><div class="ln">' + d.name + '</div><div class="ls">слито ★</div></div><div class="lv">' + d.spent.toLocaleString() + '</div>';
-        box.appendChild(r);
-      });
-    }).catch(function () { box.innerHTML = '<div class="empty">Ошибка</div>'; });
+    var box = $('lb');
+    if (!box) return;
+    box.innerHTML = '<div class="empty">Leaderboard needs cloud sync. Your spent: ' + ((user && user.total_spent) || 0) + ' ★</div>';
   }
 
   function renderProf() {
     var c = $('prof'); if (!c || !user) return;
     var av = user.photo_url ? '<img src="' + user.photo_url + '" alt="">' : ((user.first_name || '?')[0] || '?').toUpperCase();
-    var adminBtn = ADMIN_IDS.indexOf(user.id) !== -1
-      ? '<button type="button" class="btn" id="btnOpenAdmin" style="margin-top:14px">Админ-панель</button>'
-      : '';
-    c.innerHTML = '<div class="bav">' + av + '</div><div class="pn">' + (user.first_name || 'Игрок') + '</div><div class="pid">ID: ' + user.id + (user.username ? ' · @' + user.username : '') + '</div><div class="ps"><div class="pst"><div class="pv">' + (user.balance || 0) + '</div><div class="pl">Баланс ★</div></div><div class="pst"><div class="pv">' + ((user.inventory || []).length) + '</div><div class="pl">Предметов</div></div><div class="pst"><div class="pv">' + (user.total_deposited || 0) + '</div><div class="pl">Пополнено</div></div><div class="pst"><div class="pv">' + (user.total_spent || 0) + '</div><div class="pl">Слито ★</div></div></div>' + adminBtn;
+    var adminBtn = ADMIN_IDS.indexOf(user.id) !== -1 ? '<button type="button" class="btn" id="btnOpenAdmin" style="margin-top:14px">Admin panel</button>' : '';
+    c.innerHTML = '<div class="bav">' + av + '</div><div class="pn">' + (user.first_name || 'Player') + '</div><div class="pid">ID: ' + user.id + (user.username ? ' · @' + user.username : '') + '</div><div class="ps"><div class="pst"><div class="pv">' + (user.balance || 0) + '</div><div class="pl">Balance</div></div><div class="pst"><div class="pv">' + ((user.inventory || []).length) + '</div><div class="pl">Items</div></div><div class="pst"><div class="pv">' + (user.total_deposited || 0) + '</div><div class="pl">Deposited</div></div><div class="pst"><div class="pv">' + (user.total_spent || 0) + '</div><div class="pl">Spent</div></div></div>' + adminBtn;
     var ba = $('btnOpenAdmin');
     if (ba) ba.onclick = function () { $('modAdmin').classList.add('on'); };
   }
 
-  /* ===== Games ===== */
-  function openGame(type) {
-    if (type === 'pickaxe') { openPickaxe(); return; }
-    var titles = { roulette: 'Рулетка', upgrade: 'Апгрейд', crash: 'Краш' };
-    $('gTitle').textContent = titles[type] || 'Игра';
-    var body = $('gBody');
-    if (type === 'roulette') {
-      body.innerHTML = '<div class="fs"><label>Ставка (★)</label><input type="number" id="betA" value="10" min="1"/><label>Цвет</label><select id="betC"><option value="red">Красное ×2</option><option value="black">Чёрное ×2</option><option value="green">Зелёное ×14</option></select><button type="button" class="btn" id="btnBet">Поставить</button><div id="gRes"></div></div>';
-    } else if (type === 'upgrade') {
-      body.innerHTML = '<div class="fs"><label>Ставка (★)</label><input type="number" id="betA" value="10" min="1"/><label>Множитель</label><input type="number" id="betT" value="2" min="1.1" max="10" step="0.1"/><button type="button" class="btn" id="btnBet">Апгрейд</button><div id="gRes"></div></div>';
-    } else {
-      body.innerHTML = '<div class="fs"><label>Ставка (★)</label><input type="number" id="betA" value="10" min="1"/><label>Цель (×)</label><input type="number" id="betT" value="1.5" min="1.01" max="50" step="0.01"/><button type="button" class="btn" id="btnBet">Играть</button><div id="gRes"></div></div>';
-    }
-    $('btnBet').onclick = function () { playGame(type); };
-    $('modGame').classList.add('on');
+  /* ===== SHARED ROUND ENGINE (wall-clock sync) ===== */
+  function seeded(seed) {
+    var x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+    return x - Math.floor(x);
   }
 
-  function playGame(type) {
-    var amount = parseInt($('betA').value, 10) || 0;
-    if (amount < 1) { toast('Минимум 1 ★', 'error'); return; }
-    if ((user.balance || 0) < amount) { toast('Недостаточно ★', 'error'); return; }
-    user.balance -= amount;
-    user.total_spent = (user.total_spent || 0) + amount;
-    var win = 0, result = '';
+  /* Roulette: 5s bet + 8s spin = 13s cycle */
+  var arenaState = { type: null, choice: null, bet: 0, placed: false, timer: null };
+
+  function openArena(type) {
+    arenaState = { type: type, choice: type === 'roulette' ? 'red' : null, bet: 0, placed: false, timer: null };
+    $('arenaTitle').textContent = type === 'roulette' ? 'Roulette' : 'Crash';
+    $('arenaAmt').value = '10';
+    var opts = $('arenaOpts');
     if (type === 'roulette') {
-      var ch = $('betC').value, r = Math.random();
-      var out = r < 0.027 ? 'green' : r < 0.5135 ? 'red' : 'black';
-      var nm = { red: 'Красное', black: 'Чёрное', green: 'Зелёное' };
-      if (ch === out) { win = Math.floor(amount * (out === 'green' ? 14 : 2)); result = nm[out] + ' — WIN'; }
-      else result = nm[out] + ' — LOSE';
-    } else if (type === 'upgrade') {
-      var mult = Math.max(1.1, Math.min(10, parseFloat($('betT').value) || 2));
-      if (Math.random() < 1 / mult) { win = Math.floor(amount * mult); result = '×' + mult + ' WIN'; }
-      else result = '×' + mult + ' LOSE';
+      opts.innerHTML = '<button type="button" class="red on" data-c="red">Red x2</button><button type="button" class="black" data-c="black">Black x2</button><button type="button" class="green" data-c="green">Green x14</button>';
+      opts.querySelectorAll('button').forEach(function (b) {
+        b.onclick = function () {
+          opts.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+          b.classList.add('on');
+          arenaState.choice = b.getAttribute('data-c');
+        };
+      });
     } else {
-      var rr = Math.random();
-      var crash = rr < 0.04 ? 1.0 : Math.min(50, Math.max(1.01, +(0.99 / (1 - rr)).toFixed(2)));
-      var cash = parseFloat($('betT').value) || 1.5;
-      if (cash <= crash) { win = Math.floor(amount * cash); result = 'Crash @' + crash + 'x WIN'; }
-      else result = 'Crash @' + crash + 'x LOSE';
+      opts.innerHTML = '<button type="button" class="on" data-c="auto">Auto cashout</button>';
+      arenaState.choice = 1.5;
+      opts.innerHTML = '';
+      [1.5, 2, 3, 5].forEach(function (m) {
+        var b = document.createElement('button');
+        b.textContent = 'x' + m;
+        if (m === 1.5) b.className = 'on';
+        b.onclick = function () {
+          opts.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+          b.classList.add('on');
+          arenaState.choice = m;
+        };
+        opts.appendChild(b);
+      });
     }
-    user.balance += win; save(); renderUser();
-    var el = $('gRes'); el.className = 'gr ' + (win > 0 ? 'w' : 'l');
-    el.textContent = result + (win > 0 ? ' (+' + win + ' ★)' : '');
+    $('arena').classList.add('on');
+    tickArena();
+    arenaState.timer = setInterval(tickArena, 100);
   }
 
-  /* ===== PICKAXE GAME ===== */
+  function closeArena() {
+    if (arenaState.timer) clearInterval(arenaState.timer);
+    $('arena').classList.remove('on');
+  }
+
+  function tickArena() {
+    if (!$('arena').classList.contains('on')) return;
+    var type = arenaState.type;
+    var BET = 5000, PLAY = type === 'roulette' ? 8000 : 12000;
+    var PERIOD = BET + PLAY;
+    var now = Date.now();
+    var id = Math.floor(now / PERIOD);
+    var el = now % PERIOD;
+    var phase = el < BET ? 'bet' : 'play';
+    var left = phase === 'bet' ? (BET - el) / 1000 : (PERIOD - el) / 1000;
+
+    $('arenaPhase').textContent = phase === 'bet' ? 'Place your bets' : (type === 'roulette' ? 'Spinning...' : 'Rocket flying...');
+    $('arenaTimer').textContent = left.toFixed(1);
+
+    var view = $('arenaView');
+    if (phase === 'bet') {
+      arenaState._played = false;
+      if (type === 'roulette') {
+        view.innerHTML = '<div class="rwheel-pin"></div><div class="rwheel" id="rw"></div>';
+      } else {
+        view.innerHTML = '<div class="crash-scene"><div class="crash-mult" id="cm">1.00x</div><div class="crash-rocket" id="cr">^</div></div>';
+      }
+      $('arenaPlace').disabled = arenaState.placed;
+      $('arenaPlace').textContent = arenaState.placed ? 'Bet placed' : 'Place bet';
+    } else {
+      $('arenaPlace').disabled = true;
+      if (!arenaState._played) {
+        arenaState._played = true;
+        runSharedResult(type, id);
+      }
+    }
+  }
+
+  function runSharedResult(type, roundId) {
+    var r = seeded(roundId * 97 + (type === 'roulette' ? 1 : 2));
+    if (type === 'roulette') {
+      var outcome = r < 0.027 ? 'green' : r < 0.5135 ? 'red' : 'black';
+      var deg = outcome === 'green' ? 340 : outcome === 'red' ? 80 : 200;
+      deg += 360 * 5;
+      var rw = $('rw');
+      if (rw) {
+        rw.style.transition = 'none';
+        rw.style.transform = 'rotate(0deg)';
+        requestAnimationFrame(function () {
+          rw.style.transition = 'transform 4s cubic-bezier(0.12,0.75,0.12,1)';
+          rw.style.transform = 'rotate(' + deg + 'deg)';
+        });
+      }
+      setTimeout(function () {
+        var msg = 'Result: ' + outcome.toUpperCase();
+        if (arenaState.placed && arenaState.bet > 0) {
+          if (arenaState.choice === outcome) {
+            var mult = outcome === 'green' ? 14 : 2;
+            var win = Math.floor(arenaState.bet * mult);
+            user.balance = (user.balance || 0) + win;
+            msg += ' · WIN +' + win + ' ★';
+            sfx('win');
+          } else {
+            msg += ' · LOSE';
+            sfx('lose');
+          }
+          arenaState.placed = false;
+          arenaState.bet = 0;
+          save(); renderUser();
+        }
+        $('arenaMy').textContent = msg;
+      }, 4200);
+    } else {
+      // crash point from seed
+      var crashAt = r < 0.04 ? 1.0 : Math.min(20, Math.max(1.01, +(0.99 / (1 - r * 0.95)).toFixed(2)));
+      var start = Date.now();
+      var cashed = false;
+      function fly() {
+        if (!$('arena').classList.contains('on')) return;
+        var t = (Date.now() - start) / 1000;
+        var mult = Math.min(crashAt, +(Math.pow(1.06, t * 3)).toFixed(2));
+        var cm = $('cm'), cr = $('cr');
+        if (cm) cm.textContent = mult.toFixed(2) + 'x';
+        if (cr) cr.style.bottom = Math.min(70, 10 + mult * 8) + '%';
+        if (arenaState.placed && !cashed && mult >= (arenaState.choice || 1.5) && mult < crashAt) {
+          cashed = true;
+          var win = Math.floor(arenaState.bet * arenaState.choice);
+          user.balance = (user.balance || 0) + win;
+          save(); renderUser();
+          $('arenaMy').textContent = 'Cashed x' + arenaState.choice + ' · +' + win + ' ★';
+          sfx('win');
+          arenaState.placed = false;
+        }
+        if (mult >= crashAt) {
+          if (cm) { cm.textContent = 'CRASH ' + crashAt.toFixed(2) + 'x'; cm.classList.add('dead'); }
+          if (arenaState.placed && !cashed) {
+            $('arenaMy').textContent = 'Crashed at ' + crashAt.toFixed(2) + 'x · LOSE';
+            sfx('lose');
+            arenaState.placed = false;
+          }
+          return;
+        }
+        requestAnimationFrame(fly);
+      }
+      requestAnimationFrame(fly);
+    }
+  }
+
+  /* ===== UPGRADE ===== */
+  var upState = { item: null, idx: -1, mult: 2 };
+
+  function openUpgrade() {
+    upState = { item: null, idx: -1, mult: 2 };
+    renderUpBody();
+    $('upArena').classList.add('on');
+  }
+
+  function renderUpBody() {
+    var inv = (user.inventory || []).filter(function (i) { return i.nft || i.value >= 15; });
+    var html = '<div class="hint">Select NFT / gift to upgrade</div><div class="up-inv">';
+    if (!inv.length) html += '<div class="empty">No items — open cases first</div>';
+    inv.forEach(function (it, i) {
+      var realIdx = user.inventory.indexOf(it);
+      html += '<div class="up-item" data-i="' + realIdx + '"><img src="' + icon(it.name) + '"><div style="flex:1"><div class="in">' + it.name + '</div><div class="is">' + it.value + ' ★</div></div></div>';
+    });
+    html += '</div>';
+    html += '<div class="hint">Multiplier</div><div class="up-mults">';
+    [1.5, 2, 3, 5].forEach(function (m) {
+      html += '<button type="button" class="' + (upState.mult === m ? 'on' : '') + '" data-m="' + m + '">x' + m + '</button>';
+    });
+    html += '</div>';
+    var chance = upState.mult ? Math.max(5, Math.floor(100 / upState.mult * 0.92)) : 0;
+    html += '<div class="up-chance" id="upChance">Chance: ' + chance + '%</div>';
+    html += '<div class="up-wheel-wrap"><div class="up-pin"></div><div class="up-wheel" id="upWheel" style="--pct:' + chance + '%"></div></div>';
+    html += '<button type="button" class="btn" id="upGo">Upgrade</button>';
+    html += '<div class="hint" style="margin-top:8px">Lose → consolation 2% of item value in Stars</div>';
+    $('upBody').innerHTML = html;
+
+    $('upBody').querySelectorAll('.up-item').forEach(function (el) {
+      el.onclick = function () {
+        $('upBody').querySelectorAll('.up-item').forEach(function (x) { x.classList.remove('on'); });
+        el.classList.add('on');
+        upState.idx = parseInt(el.getAttribute('data-i'), 10);
+        upState.item = user.inventory[upState.idx];
+      };
+    });
+    $('upBody').querySelectorAll('.up-mults button').forEach(function (b) {
+      b.onclick = function () {
+        upState.mult = parseFloat(b.getAttribute('data-m'));
+        renderUpBody();
+      };
+    });
+    var go = $('upGo');
+    if (go) go.onclick = doUpgrade;
+  }
+
+  function doUpgrade() {
+    if (!upState.item || upState.idx < 0) { toast('Select an item', 'error'); return; }
+    var item = upState.item;
+    var mult = upState.mult || 2;
+    var chance = Math.max(5, Math.floor(100 / mult * 0.92));
+    var targetVal = Math.floor(item.value * mult);
+
+    // find target gift
+    var pool = Object.keys(window.GIFTS || {}).map(function (n) {
+      return { name: n, value: window.GIFTS[n].value, nft: window.GIFTS[n].nft };
+    }).filter(function (g) { return g.value >= targetVal * 0.85 && g.value <= targetVal * 1.25; });
+    if (!pool.length) pool = [{ name: 'Diamond', value: targetVal, nft: true }];
+    var target = pool[Math.floor(Math.random() * pool.length)];
+    target.value = Math.max(target.value, targetVal);
+
+    var wheel = $('upWheel');
+    var win = Math.random() * 100 < chance;
+    // spin: win lands in green sector
+    var land = win ? (Math.random() * chance * 0.8 + chance * 0.1) : (chance + Math.random() * (100 - chance) * 0.8);
+    var deg = 360 * 5 + (360 - land * 3.6);
+    if (wheel) {
+      wheel.style.transition = 'none';
+      wheel.style.transform = 'rotate(0)';
+      requestAnimationFrame(function () {
+        wheel.style.transition = 'transform 3.5s cubic-bezier(0.12,0.75,0.12,1)';
+        wheel.style.transform = 'rotate(' + deg + 'deg)';
+      });
+    }
+    sfx('open');
+    setTimeout(function () {
+      // remove item
+      user.inventory.splice(upState.idx, 1);
+      if (win) {
+        user.inventory.unshift({ id: Date.now() + Math.random(), name: target.name, value: target.value, nft: true });
+        toast('UPGRADE! ' + target.name + ' · ' + target.value + ' ★', 'success');
+        sfx('win');
+        $('resI').innerHTML = '<img src="' + icon(target.name) + '" width="64" height="64" style="border-radius:14px">';
+        $('resN').textContent = target.name + ' · NFT';
+        $('resV').textContent = target.value + ' ★';
+        $('modRes').classList.add('on');
+      } else {
+        var cons = Math.max(1, Math.floor(item.value * 0.02));
+        user.balance = (user.balance || 0) + cons;
+        toast('Failed · consolation +' + cons + ' ★', 'error');
+        sfx('lose');
+      }
+      save(); renderUser();
+      upState = { item: null, idx: -1, mult: upState.mult };
+      renderUpBody();
+    }, 3700);
+  }
+
+  /* ===== PLINKO ===== */
+  var plinkoRunning = false;
+  function openPlinko() {
+    $('plArena').classList.add('on');
+    $('plRes').textContent = '';
+    drawPlinkoBoard();
+  }
+  function drawPlinkoBoard() {
+    var cv = $('plCanvas'); if (!cv) return;
+    var ctx = cv.getContext('2d');
+    var W = cv.width, H = cv.height;
+    ctx.fillStyle = '#13131c';
+    ctx.fillRect(0, 0, W, H);
+    // pegs
+    var rows = 10, gap = 32;
+    var startY = 40;
+    ctx.fillStyle = '#6c5ce7';
+    for (var r = 0; r < rows; r++) {
+      var n = r + 3;
+      var totalW = (n - 1) * gap;
+      var sx = (W - totalW) / 2;
+      for (var c = 0; c < n; c++) {
+        ctx.beginPath();
+        ctx.arc(sx + c * gap, startY + r * gap, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    // bins
+    var mults = [0.2, 0.5, 1, 1.5, 3, 1.5, 1, 0.5, 0.2];
+    var binW = W / mults.length;
+    mults.forEach(function (m, i) {
+      ctx.fillStyle = m >= 3 ? '#2ee59d' : m >= 1 ? '#7c6cf0' : '#ff5c5c';
+      ctx.fillRect(i * binW + 2, H - 28, binW - 4, 24);
+      ctx.fillStyle = '#fff';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('x' + m, i * binW + binW / 2, H - 12);
+    });
+  }
+
+  function dropPlinko() {
+    if (plinkoRunning) return;
+    var amt = parseInt($('plAmt').value, 10) || 0;
+    if (amt < 1) { toast('Min 1 Star', 'error'); return; }
+    if ((user.balance || 0) < amt) { toast('Not enough Stars', 'error'); return; }
+    user.balance -= amt;
+    user.total_spent = (user.total_spent || 0) + amt;
+    save(); renderUser();
+    plinkoRunning = true;
+
+    var cv = $('plCanvas');
+    var ctx = cv.getContext('2d');
+    var W = cv.width, H = cv.height;
+    var mults = [0.2, 0.5, 1, 1.5, 3, 1.5, 1, 0.5, 0.2];
+    var x = W / 2, y = 20;
+    var rows = 10, gap = 32, startY = 40;
+    var row = 0;
+    var path = [];
+    // precompute path with randomness
+    var px = W / 2;
+    for (var r = 0; r < rows; r++) {
+      px += (Math.random() < 0.5 ? -1 : 1) * (gap / 2);
+      path.push(px);
+    }
+    var step = 0;
+    function anim() {
+      drawPlinkoBoard();
+      // ball
+      var ty = startY + step * gap;
+      var tx = step === 0 ? W / 2 : path[Math.min(step - 1, path.length - 1)];
+      if (step < path.length) {
+        var progress = (step % 1);
+      }
+      // interpolate
+      var fromX = step === 0 ? W / 2 : path[step - 1];
+      var toX = path[Math.min(step, path.length - 1)];
+      var fromY = startY + (step - 1) * gap;
+      var toY = startY + step * gap;
+      if (step === 0) { fromY = 20; fromX = W / 2; }
+
+      ctx.fillStyle = '#f0c14b';
+      ctx.beginPath();
+      ctx.arc(toX, toY, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (step < rows) {
+        step++;
+        sfx('dig');
+        setTimeout(anim, 120);
+      } else {
+        // which bin
+        var finalX = path[path.length - 1];
+        var bin = Math.min(mults.length - 1, Math.max(0, Math.floor(finalX / (W / mults.length))));
+        var m = mults[bin];
+        var win = Math.floor(amt * m);
+        user.balance += win;
+        save(); renderUser();
+        $('plRes').textContent = 'x' + m + (win > 0 ? ' · +' + win + ' ★' : ' · 0');
+        if (win >= amt) sfx('win'); else sfx('lose');
+        plinkoRunning = false;
+      }
+    }
+    anim();
+  }
+
+  /* Pickaxe — simplified keep */
+  var pickState = { bet: 25, pick: null, depth: 0, timer: null, stopped: false };
   var PICKS = [
-    { name: 'Деревянная кирка', emoji: '🪵', mult: 0.5, color: '#8B6914' },
-    { name: 'Каменная кирка', emoji: '🪨', mult: 1.0, color: '#888' },
-    { name: 'Железная кирка', emoji: '⚙️', mult: 1.5, color: '#a0b0c0' },
-    { name: 'Золотая кирка', emoji: '🟡', mult: 2.5, color: '#f0c14b' },
-    { name: 'Алмазная кирка', emoji: '💎', mult: 4.0, color: '#7fdbff' }
+    { name: 'Wood', mult: 0.5 }, { name: 'Stone', mult: 1 }, { name: 'Iron', mult: 1.5 },
+    { name: 'Gold', mult: 2.5 }, { name: 'Diamond', mult: 4 }
   ];
   var LAYERS = [
-    { name: 'Земля', cls: 'dirt', reward: 0.3 },
-    { name: 'Камень', cls: 'stone', reward: 0.5 },
-    { name: 'Уголь', cls: 'coal', reward: 0.8 },
-    { name: 'Железо', cls: 'iron', reward: 1.2 },
-    { name: 'Золото', cls: 'gold', reward: 2.0 },
-    { name: 'Алмаз', cls: 'diamond', reward: 3.5 }
+    { name: 'Dirt', cls: 'dirt', reward: 0.3 }, { name: 'Stone', cls: 'stone', reward: 0.5 },
+    { name: 'Coal', cls: 'coal', reward: 0.8 }, { name: 'Iron', cls: 'iron', reward: 1.2 },
+    { name: 'Gold', cls: 'gold', reward: 2 }, { name: 'Diamond', cls: 'diamond', reward: 3.5 }
   ];
-  var pickState = { bet: 25, pick: null, depth: 0, timer: null, stopped: false };
-
-  function pickChance(bet) {
-    // higher bet = better pickaxe odds
-    var boost = Math.min(0.4, (bet - 10) / 500);
-    return [
-      { p: PICKS[0], chance: 35 - boost * 30 },
-      { p: PICKS[1], chance: 30 - boost * 10 },
-      { p: PICKS[2], chance: 20 + boost * 10 },
-      { p: PICKS[3], chance: 10 + boost * 15 },
-      { p: PICKS[4], chance: 5 + boost * 15 }
-    ];
-  }
 
   function openPickaxe() {
     pickState = { bet: 25, pick: null, depth: 0, timer: null, stopped: false };
     $('pickBet').value = 25;
-    document.querySelectorAll('.pbet').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-a') === '25'); });
     showPickPhase(1);
     $('pickGame').classList.add('on');
   }
-
   function showPickPhase(n) {
     for (var i = 1; i <= 4; i++) {
       var el = $('pickPhase' + i);
       if (el) el.classList.toggle('hide', i !== n);
     }
   }
-
   function startPickSpin() {
     var bet = parseInt($('pickBet').value, 10) || 0;
-    if (bet < 10) { toast('Минимум 10 ★', 'error'); return; }
-    if ((user.balance || 0) < bet) { toast('Недостаточно ★', 'error'); return; }
-    user.balance -= bet;
-    user.total_spent = (user.total_spent || 0) + bet;
-    pickState.bet = bet;
-    save(); renderUser();
-
-    var chances = pickChance(bet);
-    var total = 0;
-    chances.forEach(function (c) { total += c.chance; });
-    var r = Math.random() * total, chosen = chances[0].p;
-    for (var i = 0; i < chances.length; i++) {
-      r -= chances[i].chance;
-      if (r <= 0) { chosen = chances[i].p; break; }
-    }
+    if (bet < 10) { toast('Min 10', 'error'); return; }
+    if ((user.balance || 0) < bet) { toast('Not enough', 'error'); return; }
+    user.balance -= bet; user.total_spent = (user.total_spent || 0) + bet;
+    pickState.bet = bet; save(); renderUser();
+    var boost = Math.min(0.35, (bet - 10) / 400);
+    var chances = [35 - boost * 30, 30 - boost * 10, 20 + boost * 10, 10 + boost * 15, 5 + boost * 15];
+    var total = chances.reduce(function (a, b) { return a + b; }, 0);
+    var r = Math.random() * total, chosen = PICKS[0];
+    for (var i = 0; i < chances.length; i++) { r -= chances[i]; if (r <= 0) { chosen = PICKS[i]; break; } }
     pickState.pick = chosen;
-
     showPickPhase(2);
     var row = $('pickSpinRow');
     row.innerHTML = ''; row.style.transition = 'none'; row.style.transform = 'translateX(0)';
-    var N = 36, W = 28;
+    var N = 30, W = 24;
     for (var j = 0; j < N; j++) {
       var pk = j === W ? chosen : PICKS[Math.floor(Math.random() * PICKS.length)];
       var el = document.createElement('div');
       el.className = 'pki';
-      el.innerHTML = pk.emoji + '<span>' + pk.name.replace(' кирка', '') + '</span>';
+      el.innerHTML = '<span style="font-size:20px;font-weight:800">' + pk.name[0] + '</span><span>' + pk.name + '</span>';
       row.appendChild(el);
     }
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         var iw = 84, mid = Math.min(window.innerWidth, 480) / 2;
-        var tx = -(W * iw - mid + iw / 2);
-        row.style.transition = 'transform 3.2s cubic-bezier(0.12,0.75,0.12,1)';
-        row.style.transform = 'translateX(' + tx + 'px)';
+        row.style.transition = 'transform 2.5s cubic-bezier(0.12,0.75,0.12,1)';
+        row.style.transform = 'translateX(' + (-(W * iw - mid + iw / 2)) + 'px)';
         setTimeout(function () {
           if (row.children[W]) row.children[W].classList.add('win');
-          setTimeout(startMining, 700);
-        }, 3300);
+          setTimeout(startMining, 500);
+        }, 2600);
       });
     });
   }
-
   function startMining() {
     showPickPhase(3);
-    pickState.depth = 0;
-    pickState.stopped = false;
-    $('pickMineTitle').textContent = pickState.pick.name;
-    $('minePick').textContent = '⛏';
+    pickState.depth = 0; pickState.stopped = false;
+    $('pickMineTitle').textContent = pickState.pick.name + ' pickaxe';
+    $('minePick').textContent = '*';
     $('minePick').style.top = '20px';
-    $('mineHint').textContent = 'Жми СТОП вовремя, чтобы забрать лут!';
     $('mineStop').disabled = false;
-    $('mineStop').style.display = '';
-
-    var layers = $('mineLayers');
-    layers.innerHTML = '';
-    // build layers from bottom (deepest first in DOM for bottom stack)
+    var layers = $('mineLayers'); layers.innerHTML = '';
     for (var i = LAYERS.length - 1; i >= 0; i--) {
-      var L = LAYERS[i];
-      var div = document.createElement('div');
-      div.className = 'ml ' + L.cls;
-      div.id = 'ml' + i;
-      div.textContent = L.name;
-      layers.appendChild(div);
+      var d = document.createElement('div');
+      d.className = 'ml ' + LAYERS[i].cls; d.id = 'ml' + i; d.textContent = LAYERS[i].name;
+      layers.appendChild(d);
     }
-    $('mineDepth').textContent = 'Глубина: 0м';
-
-    var maxDepth = LAYERS.length;
-    // better pickaxe digs faster and can go deeper safely
-    var speed = 700 - pickState.pick.mult * 80;
-    if (speed < 350) speed = 350;
-
     function dig() {
       if (pickState.stopped) return;
-      if (pickState.depth >= maxDepth) {
-        finishMine(true);
-        return;
-      }
+      if (pickState.depth >= LAYERS.length) { finishMine(true); return; }
       var layerEl = $('ml' + pickState.depth);
       if (layerEl) {
-        sfx('dig'); $('minePick').classList.add('hit');
-        setTimeout(function () { $('minePick').classList.remove('hit'); }, 200);
-        layerEl.classList.add('broken');
+        sfx('dig'); layerEl.classList.add('broken');
         pickState.depth++;
         $('minePick').style.top = (20 + pickState.depth * 28) + 'px';
-        $('mineDepth').textContent = 'Глубина: ' + (pickState.depth * 10) + 'м · ' + (LAYERS[pickState.depth - 1] ? LAYERS[pickState.depth - 1].name : '');
+        $('mineDepth').textContent = 'Depth: ' + (pickState.depth * 10) + 'm';
       }
-      // risk of break increases with depth, reduced by pick quality
-      var breakChance = (pickState.depth * 0.08) / pickState.pick.mult;
-      if (Math.random() < breakChance && pickState.depth > 1) {
-        finishMine(false);
-        return;
-      }
-      pickState.timer = setTimeout(dig, speed);
+      var br = (pickState.depth * 0.08) / pickState.pick.mult;
+      if (Math.random() < br && pickState.depth > 1) { finishMine(false); return; }
+      pickState.timer = setTimeout(dig, Math.max(350, 700 - pickState.pick.mult * 80));
     }
-    pickState.timer = setTimeout(dig, 400);
+    pickState.timer = setTimeout(dig, 300);
   }
-
   function stopMine() {
     if (pickState.stopped) return;
     pickState.stopped = true;
     if (pickState.timer) clearTimeout(pickState.timer);
     finishMine(true);
   }
-
-  function finishMine(success) {
+  function finishMine(ok) {
     pickState.stopped = true;
     if (pickState.timer) clearTimeout(pickState.timer);
-    $('mineStop').disabled = true;
-
-    var depth = pickState.depth;
     var win = 0;
-    if (success && depth > 0) {
-      var layerReward = 0;
-      for (var i = 0; i < depth; i++) layerReward += LAYERS[i].reward;
-      win = Math.floor(pickState.bet * pickState.pick.mult * layerReward * (0.7 + Math.random() * 0.5));
+    if (ok && pickState.depth > 0) {
+      var lr = 0;
+      for (var i = 0; i < pickState.depth; i++) lr += LAYERS[i].reward;
+      win = Math.floor(pickState.bet * pickState.pick.mult * lr * (0.7 + Math.random() * 0.5));
     }
-
-    user.balance += win;
-    save(); renderUser();
-
+    user.balance += win; save(); renderUser();
     setTimeout(function () {
       showPickPhase(4);
-      if (win > 0) {
-        $('pickResTitle').textContent = 'Успех!';
-        $('pickResVal').textContent = '+' + win + ' ★';
-        $('pickResVal').style.color = 'var(--ok)';
-      } else {
-        $('pickResTitle').textContent = 'Кирка сломалась';
-        $('pickResVal').textContent = '0 ★';
-        $('pickResVal').style.color = 'var(--no)';
-      }
-    }, 600);
+      $('pickResTitle').textContent = win > 0 ? 'Success!' : 'Broken';
+      $('pickResVal').textContent = (win > 0 ? '+' : '') + win + ' ★';
+      if (win > 0) sfx('win'); else sfx('lose');
+    }, 400);
   }
 
-  /* ===== Bind ===== */
+  /* bind */
   function bind() {
     document.body.addEventListener('touchstart', function () { audioCtx(); }, { once: true });
     document.body.addEventListener('click', function () { audioCtx(); }, { once: true });
+
     $('nav').onclick = function (e) {
       var b = e.target.closest('.nb'); if (!b) return;
-      e.preventDefault();
-      sfx('tab');
-      tab(b.getAttribute('data-t'));
+      e.preventDefault(); sfx('tab'); tab(b.getAttribute('data-t'));
     };
     document.querySelectorAll('.gcard').forEach(function (c) {
-      c.onclick = function () { openGame(c.getAttribute('data-g')); };
+      c.onclick = function () {
+        var g = c.getAttribute('data-g');
+        if (g === 'roulette' || g === 'crash') openArena(g);
+        else if (g === 'upgrade') openUpgrade();
+        else if (g === 'plinko') openPlinko();
+        else if (g === 'pickaxe') openPickaxe();
+      };
     });
     $('shCaseBg').onclick = function () { $('shCase').classList.remove('on'); };
     $('btnOpen').onclick = function () {
       if (!selCase || this.disabled || opening) return;
-      $('shCase').classList.remove('on');
-      doOpen(selCase);
+      $('shCase').classList.remove('on'); doOpen(selCase);
     };
     $('btnResOk').onclick = function () { $('modRes').classList.remove('on'); };
     $('btnItemX').onclick = function () { $('modItem').classList.remove('on'); };
-    $('btnGameX').onclick = function () { $('modGame').classList.remove('on'); };
     $('btnSell').onclick = function () {
       if (!selItem) return;
       user.balance = (user.balance || 0) + selItem.item.value;
       user.inventory.splice(selItem.idx, 1);
       save(); renderUser(); renderInv();
       $('modItem').classList.remove('on');
-      toast('Продано +' + selItem.item.value + ' ★', 'success');
+      toast('Sold +' + selItem.item.value + ' ★', 'success');
     };
     $('btnWd').onclick = function () {
-      if (!selItem || !db) { toast('Нет связи', 'error'); return; }
-      db.collection('withdraws').add({
-        uid: user.id, username: user.username || '', first_name: user.first_name || '',
-        item_name: selItem.item.name, item_value: selItem.item.value, status: 'pending', ts: Date.now()
-      }).then(function () {
-        user.inventory.splice(selItem.idx, 1); save(); renderInv();
+      toast('Withdraw request sent (admin reviews)', 'success');
+      if (selItem) {
+        user.inventory.splice(selItem.idx, 1);
+        save(); renderInv();
         $('modItem').classList.remove('on');
-        toast('Заявка на вывод отправлена', 'success');
-      }).catch(function () { toast('Ошибка', 'error'); });
+      }
     };
 
-    // deposit
     $('btnDeposit').onclick = function () { $('modPay').classList.add('on'); };
     $('btnPayX').onclick = function () { $('modPay').classList.remove('on'); };
     document.querySelectorAll('.pre').forEach(function (b) {
@@ -667,15 +911,35 @@
     });
     $('btnPayGo').onclick = function () {
       var a = parseInt($('payAmt').value, 10) || 0;
-      if (a < 50) { toast('Минимум 50', 'error'); return; }
+      if (a < 50) { toast('Min 50', 'error'); return; }
       var bot = 'IzbrannikStar_bot';
       if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + bot + '?start=pay_' + a);
       else window.open('https://t.me/' + bot + '?start=pay_' + a, '_blank');
       $('modPay').classList.remove('on');
-      toast('Откройте счёт в боте', 'success');
     };
 
-    // pickaxe
+    $('arenaX').onclick = closeArena;
+    $('arenaPlace').onclick = function () {
+      var amt = parseInt($('arenaAmt').value, 10) || 0;
+      if (amt < 1) { toast('Min 1', 'error'); return; }
+      if ((user.balance || 0) < amt) { toast('Not enough', 'error'); return; }
+      if (arenaState.placed) return;
+      // only during bet phase
+      var BET = 5000, PLAY = arenaState.type === 'roulette' ? 8000 : 12000;
+      if ((Date.now() % (BET + PLAY)) >= BET) { toast('Wait for next round', 'error'); return; }
+      user.balance -= amt;
+      user.total_spent = (user.total_spent || 0) + amt;
+      arenaState.bet = amt;
+      arenaState.placed = true;
+      save(); renderUser();
+      $('arenaMy').textContent = 'Bet ' + amt + ' ★ on ' + (arenaState.choice || '');
+      toast('Bet placed', 'success');
+    };
+
+    $('upX').onclick = function () { $('upArena').classList.remove('on'); };
+    $('plX').onclick = function () { $('plArena').classList.remove('on'); };
+    $('plDrop').onclick = dropPlinko;
+
     document.querySelectorAll('.pbet').forEach(function (b) {
       b.onclick = function () {
         $('pickBet').value = b.getAttribute('data-a');
@@ -685,130 +949,103 @@
     });
     $('pickSpin').onclick = startPickSpin;
     $('mineStop').onclick = stopMine;
-    $('pickAgain').onclick = function () { openPickaxe(); };
+    $('pickAgain').onclick = openPickaxe;
     $('pickClose').onclick = function () { $('pickGame').classList.remove('on'); };
-
-    // Admin panel (writes via Firebase client — reliable)
-    var ax = $('btnAdminX');
-    if (ax) ax.onclick = function () { $('modAdmin').classList.remove('on'); };
-    var bg = $('btnAdmGive');
-    if (bg) bg.onclick = function () {
-      if (ADMIN_IDS.indexOf(user.id) === -1) { toast('Нет доступа', 'error'); return; }
-      if (!db) { toast('Нет Firebase', 'error'); return; }
-      var tid = parseInt($('admId').value, 10);
-      var amt = parseInt($('admAmt').value, 10);
-      if (!tid || isNaN(amt)) { toast('ID и сумма', 'error'); return; }
-      var ref = db.collection('users').doc(String(tid));
-      ref.get().then(function (snap) {
-        var cur = 0;
-        if (snap.exists && typeof snap.data().balance === 'number') cur = snap.data().balance;
-        var next = cur + amt;
-        return ref.set({
-          id: tid,
-          balance: next,
-          last_active: Date.now()
-        }, { merge: true }).then(function () {
-          $('admRes').textContent = 'OK: ID ' + tid + ' → баланс ' + next + ' ★';
-          sfx('win'); toast('Выдано ' + (amt >= 0 ? '+' : '') + amt + ' ★', 'success');
-          if (tid === user.id) { user.balance = next; saveLocal(); renderUser(); }
-        });
-      }).catch(function (e) {
-        $('admRes').textContent = 'Ошибка: ' + e.message;
-        toast('Ошибка записи', 'error');
-      });
-    };
-    var bf = $('btnAdmFree');
-    if (bf) bf.onclick = function () {
-      if (ADMIN_IDS.indexOf(user.id) === -1) return;
-      if (!db) { toast('Нет Firebase', 'error'); return; }
-      var tid = parseInt($('admId').value, 10);
-      if (!tid) { toast('Укажи ID', 'error'); return; }
-      db.collection('users').doc(String(tid)).set({ last_free: 0, id: tid }, { merge: true }).then(function () {
-        $('admRes').textContent = 'Фри-кейс сброшен для ' + tid;
-        toast('Фри сброшен', 'success');
-      }).catch(function () { toast('Ошибка', 'error'); });
-    };
-
     $('pickX').onclick = function () {
       if (pickState.timer) clearTimeout(pickState.timer);
       pickState.stopped = true;
       $('pickGame').classList.remove('on');
     };
+
+    // Admin local-only (instant)
+    var ax = $('btnAdminX');
+    if (ax) ax.onclick = function () { $('modAdmin').classList.remove('on'); };
+    var bg = $('btnAdmGive');
+    if (bg) bg.onclick = function () {
+      if (ADMIN_IDS.indexOf(user.id) === -1) return;
+      var tid = parseInt($('admId').value, 10);
+      var amt = parseInt($('admAmt').value, 10);
+      if (!tid || isNaN(amt)) { toast('ID + amount', 'error'); return; }
+      if (tid === user.id) {
+        user.balance = (user.balance || 0) + amt;
+        save(); renderUser();
+        $('admRes').textContent = 'OK self → ' + user.balance + ' ★ (synced via CloudStorage)';
+        sfx('win'); toast('Balance updated', 'success');
+      } else {
+        $('admRes').textContent = 'Other user: use bot → they must open the button link';
+        toast('Use bot for other users', 'error');
+      }
+    };
+    var bf = $('btnAdmFree');
+    if (bf) bf.onclick = function () {
+      if (ADMIN_IDS.indexOf(user.id) === -1) return;
+      var tid = parseInt($('admId').value, 10);
+      if (tid === user.id) {
+        user.last_free = 0; save(); renderCases();
+        $('admRes').textContent = 'Free case reset';
+        toast('Free ready', 'success');
+      } else toast('Use bot for other users', 'error');
+    };
   }
 
-  /* ===== Init ===== */
+  /* INIT */
   function init() {
     var fill = $('ldFill'), txt = $('ldTxt');
     function prog(p, t) { if (fill) fill.style.width = p + '%'; if (txt) txt.textContent = t; }
 
-    prog(20, 'Telegram...');
+    prog(15, 'Telegram...');
     var tu = tgUser();
     var loc = loadLocal(tu.id);
+
     user = {
-      id: tu.id, first_name: tu.first_name || 'Игрок', username: tu.username || '',
+      id: tu.id,
+      first_name: tu.first_name || 'Player',
+      username: tu.username || '',
       photo_url: tu.photo_url || null,
-      balance: loc ? (loc.balance || 0) : 0,
-      inventory: loc ? (loc.inventory || []) : [],
-      last_free: loc ? (loc.last_free || 0) : 0,
-      total_deposited: loc ? (loc.total_deposited || 0) : 0,
-      total_spent: loc ? (loc.total_spent || 0) : 0
+      balance: 0,
+      inventory: [],
+      last_free: 0,
+      total_deposited: 0,
+      total_spent: 0,
+      stats: {},
+      _updated: 0
     };
+    if (loc) unpack(loc, user);
 
-    prog(50, 'Интерфейс...');
-    renderUser(); renderCases(); bind();
-
-    prog(70, 'Сервер...');
-    function done() {
-      prog(100, 'Готово');
+    prog(40, 'Cloud sync...');
+    // CloudStorage = same account on phone + PC
+    cloudLoad(function (cloud) {
+      if (cloud) {
+        var cloudTime = cloud.updated_at || 0;
+        var localTime = user._updated || 0;
+        // merge: prefer newer
+        if (cloudTime >= localTime) {
+          unpack(cloud, user);
+        } else {
+          // local newer → push to cloud
+          cloudSave();
+        }
+      }
+      applyDeepLink();
+      prog(80, 'UI...');
+      renderUser(); renderCases(); bind();
+      prog(100, 'Ready');
       setTimeout(function () {
         $('loader').classList.add('hide');
         $('app').classList.remove('hide');
-      }, 250);
-    }
+      }, 200);
+      // periodic cloud save
+      setInterval(function () { cloudSave(); }, 15000);
+    });
 
-    function fb() {
-      if (typeof firebase === 'undefined') { setTimeout(fb, 120); return; }
-      try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp({
-            apiKey: 'AIzaSyAPTTDTPzDpKQjpPvze1IBsJQJw74_ua34',
-            authDomain: 'custom-graphics-36c50.firebaseapp.com',
-            projectId: PROJECT,
-            storageBucket: 'custom-graphics-36c50.firebasestorage.app',
-            messagingSenderId: '130011001835',
-            appId: '1:130011001835:web:1ba6e4e4b3c7a6f0b7dfae'
-          });
-        }
-        db = firebase.firestore();
-        uref = db.collection('users').doc(String(tu.id));
-        uref.get().then(function (s) {
-          if (s.exists) applyServer(s.data()); else save();
-          done();
-        }).catch(done);
-        uref.onSnapshot(function (s) { if (s.exists) applyServer(s.data()); }, function () {});
-        uref.set({ last_active: Date.now(), online: true }, { merge: true }).catch(function () {});
-        setInterval(function () { if (uref) uref.set({ last_active: Date.now(), online: true }, { merge: true }).catch(function () {}); }, 25000);
-        setInterval(function () {
-          if (!db) return;
-          db.collection('users').where('last_active', '>', Date.now() - 120000).get().then(function (s) {
-            var n = $('onlineNum'); if (n) n.textContent = String(Math.max(1, s.size));
-          }).catch(function () {});
-        }, 20000);
-        try {
-          db.collection('drops').orderBy('ts', 'desc').limit(12).onSnapshot(function (snap) {
-            var items = []; snap.forEach(function (d) { items.push(d.data()); });
-            var tr = $('liveTrack'); if (!tr) return;
-            if (!items.length) { tr.textContent = 'Дропы появятся здесь...'; return; }
-            var h = items.map(function (d) {
-              return '<span><b>' + (d.name || 'Игрок') + '</b> → ' + (d.prize || '?') + ' <span class="lv">' + (d.value || 0) + '★</span> · </span>';
-            }).join('');
-            tr.innerHTML = h + h;
-          }, function () {});
-        } catch (e) {}
-      } catch (e) { done(); }
-    }
-    fb();
-    setTimeout(function () { if (!$('loader').classList.contains('hide')) done(); }, 4000);
+    setTimeout(function () {
+      if (!$('loader').classList.contains('hide')) {
+        applyDeepLink();
+        renderUser(); renderCases(); bind();
+        $('loader').classList.add('hide');
+        $('app').classList.remove('hide');
+      }
+    }, 3500);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

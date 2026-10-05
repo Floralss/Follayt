@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
@@ -12,7 +12,7 @@
     <div class="ld-ring"></div>
     <div class="ld-title">IZBRANNIK STAR</div>
     <div class="ld-bar"><i id="ldFill"></i></div>
-    <div class="ld-txt" id="ldTxt">Загрузка...</div>
+    <div class="ld-txt" id="ldTxt">Loading...</div>
   </div>
 
   <div id="app" class="hide">
@@ -26,56 +26,61 @@
       </div>
       <div class="hdr-right">
         <div class="onl"><i></i><span id="onlineNum">1</span></div>
-        <button type="button" class="btn-pay" id="btnDeposit">Пополнить</button>
+        <button type="button" class="btn-pay" id="btnDeposit">Top up</button>
       </div>
     </header>
 
-    <div class="live"><span class="live-b">LIVE</span><div class="live-w"><div class="live-t" id="liveTrack">Дропы появятся здесь...</div></div></div>
+    <div class="live"><span class="live-b">LIVE</span><div class="live-w"><div class="live-t" id="liveTrack">Waiting for drops...</div></div></div>
 
     <main class="main">
       <section id="tab-cases" class="tab on">
-        <h2 class="h2">Кейсы</h2>
+        <h2 class="h2">Cases</h2>
         <div class="cases" id="casesGrid"></div>
       </section>
 
       <section id="tab-games" class="tab">
-        <h2 class="h2">Игры</h2>
+        <h2 class="h2">Games</h2>
         <div class="games">
-          <div class="gcard" data-g="pickaxe">
-            <div class="gico g-pick">⛏</div>
-            <div class="ginfo"><div class="gt">Кирка</div><div class="gd">Крути · копай · лутай</div></div>
-            <button type="button" class="gbtn">Играть</button>
-          </div>
           <div class="gcard" data-g="roulette">
-            <div class="gico g-rul">🎯</div>
-            <div class="ginfo"><div class="gt">Рулетка</div><div class="gd">×2 / ×14</div></div>
-            <button type="button" class="gbtn">Играть</button>
-          </div>
-          <div class="gcard" data-g="upgrade">
-            <div class="gico g-up">⬆</div>
-            <div class="ginfo"><div class="gt">Апгрейд</div><div class="gd">Умножь ставку</div></div>
-            <button type="button" class="gbtn">Играть</button>
+            <div class="gico g-rul">R</div>
+            <div class="ginfo"><div class="gt">Roulette</div><div class="gd">5s to bet · shared round</div></div>
+            <button type="button" class="gbtn">Play</button>
           </div>
           <div class="gcard" data-g="crash">
-            <div class="gico g-cr">🚀</div>
-            <div class="ginfo"><div class="gt">Краш</div><div class="gd">Выйди вовремя</div></div>
-            <button type="button" class="gbtn">Играть</button>
+            <div class="gico g-cr">C</div>
+            <div class="ginfo"><div class="gt">Crash</div><div class="gd">5s to bet · rocket flies</div></div>
+            <button type="button" class="gbtn">Play</button>
+          </div>
+          <div class="gcard" data-g="upgrade">
+            <div class="gico g-up">U</div>
+            <div class="ginfo"><div class="gt">Upgrade</div><div class="gd">NFT · wheel · chance %</div></div>
+            <button type="button" class="gbtn">Play</button>
+          </div>
+          <div class="gcard" data-g="plinko">
+            <div class="gico g-pl">P</div>
+            <div class="ginfo"><div class="gt">Plinko</div><div class="gd">Drop balls · multipliers</div></div>
+            <button type="button" class="gbtn">Play</button>
+          </div>
+          <div class="gcard" data-g="pickaxe">
+            <div class="gico g-pick">K</div>
+            <div class="ginfo"><div class="gt">Pickaxe</div><div class="gd">Mine layers · stop in time</div></div>
+            <button type="button" class="gbtn">Play</button>
           </div>
         </div>
       </section>
 
       <section id="tab-inventory" class="tab">
-        <h2 class="h2">Инвентарь</h2>
+        <h2 class="h2">Inventory</h2>
         <div id="inv" class="inv"></div>
       </section>
 
       <section id="tab-top" class="tab">
-        <h2 class="h2">Топ по слитым ★</h2>
+        <h2 class="h2">Top spent</h2>
         <div id="lb" class="lb"></div>
       </section>
 
       <section id="tab-profile" class="tab">
-        <h2 class="h2">Профиль</h2>
+        <h2 class="h2">Profile</h2>
         <div id="prof" class="prof"></div>
       </section>
     </main>
@@ -83,23 +88,23 @@
     <nav class="nav" id="nav">
       <button type="button" class="nb on" data-t="cases">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M12 8V4M8 8l4-4 4 4"/></svg>
-        <span>Кейсы</span>
+        <span>Cases</span>
       </button>
       <button type="button" class="nb" data-t="games">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="12" rx="2"/><circle cx="8" cy="13" r="1.5"/><path d="M15 11h3M15 15h2"/></svg>
-        <span>Игры</span>
+        <span>Games</span>
       </button>
       <button type="button" class="nb" data-t="inventory">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        <span>Инвентарь</span>
+        <span>Inv</span>
       </button>
       <button type="button" class="nb" data-t="top">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 0 1-12 0V4z"/><path d="M18 4h3v3a3 3 0 0 1-3 3M6 4H3v3a3 3 0 0 0 3 3"/></svg>
-        <span>Топ</span>
+        <span>Top</span>
       </button>
       <button type="button" class="nb" data-t="profile">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        <span>Профиль</span>
+        <span>Profile</span>
       </button>
     </nav>
 
@@ -113,55 +118,77 @@
           <div><div class="cp-n" id="cpN"></div><div class="cp-d" id="cpD"></div></div>
         </div>
         <div class="cp-pr" id="cpPr"></div>
-        <div class="cp-lab">Что может выпасть</div>
+        <div class="cp-lab">Possible drops</div>
         <div class="cp-list" id="cpList"></div>
-        <button type="button" class="btn" id="btnOpen" disabled>Открыть</button>
+        <button type="button" class="btn" id="btnOpen" disabled>Open</button>
       </div>
     </div>
 
-    <!-- Spin -->
     <div class="spin" id="spin">
-      <div class="spin-lab">Открываем кейс</div>
+      <div class="spin-lab">Opening...</div>
       <div class="spin-box"><div class="spin-pin"></div><div class="spin-row" id="spinRow"></div></div>
     </div>
 
-    <!-- Result -->
     <div class="mod" id="modRes">
       <div class="mod-b">
         <div class="res-i" id="resI"></div>
         <div class="res-n" id="resN"></div>
         <div class="res-v" id="resV"></div>
-        <button type="button" class="btn" id="btnResOk">Забрать</button>
+        <button type="button" class="btn" id="btnResOk">Claim</button>
       </div>
     </div>
 
-    <!-- Item -->
     <div class="mod" id="modItem">
       <div class="mod-b">
-        <button type="button" class="mx" id="btnItemX">✕</button>
+        <button type="button" class="mx" id="btnItemX">X</button>
         <div class="res-i" id="itI"></div>
         <div class="res-n" id="itN"></div>
         <div class="res-v" id="itV"></div>
-        <button type="button" class="btn" id="btnSell">Продать</button>
-        <button type="button" class="btn-o" id="btnWd">Вывести</button>
+        <button type="button" class="btn" id="btnSell">Sell</button>
+        <button type="button" class="btn-o" id="btnWd">Withdraw</button>
       </div>
     </div>
 
-    <!-- Game generic -->
-    <div class="mod" id="modGame">
-      <div class="mod-b tl">
-        <button type="button" class="mx" id="btnGameX">✕</button>
-        <h3 id="gTitle">Игра</h3>
-        <div id="gBody"></div>
+    <!-- Shared game arena -->
+    <div class="arena" id="arena">
+      <button type="button" class="arena-x" id="arenaX">X</button>
+      <div class="arena-title" id="arenaTitle">Game</div>
+      <div class="arena-phase" id="arenaPhase">Betting...</div>
+      <div class="arena-timer" id="arenaTimer">5.0</div>
+      <div class="arena-view" id="arenaView"></div>
+      <div class="arena-bet">
+        <input type="number" id="arenaAmt" value="10" min="1" class="inp" />
+        <div class="arena-opts" id="arenaOpts"></div>
+        <button type="button" class="btn" id="arenaPlace">Place bet</button>
+        <div class="arena-my" id="arenaMy"></div>
       </div>
     </div>
 
-    <!-- Pickaxe full-screen game -->
+    <!-- Upgrade -->
+    <div class="arena" id="upArena">
+      <button type="button" class="arena-x" id="upX">X</button>
+      <div class="arena-title">Upgrade</div>
+      <div id="upBody" class="up-body"></div>
+    </div>
+
+    <!-- Plinko -->
+    <div class="arena" id="plArena">
+      <button type="button" class="arena-x" id="plX">X</button>
+      <div class="arena-title">Plinko</div>
+      <canvas id="plCanvas" width="360" height="420"></canvas>
+      <div class="arena-bet">
+        <input type="number" id="plAmt" value="10" min="1" class="inp" />
+        <button type="button" class="btn" id="plDrop">Drop ball</button>
+        <div class="arena-my" id="plRes"></div>
+      </div>
+    </div>
+
+    <!-- Pickaxe (keep) -->
     <div class="pick" id="pickGame">
-      <button type="button" class="pick-x" id="pickX">✕</button>
+      <button type="button" class="pick-x" id="pickX">X</button>
       <div class="pick-phase" id="pickPhase1">
-        <div class="pick-title">⛏ Кирка</div>
-        <div class="pick-sub">Ставка от 10 ★ — чем больше, тем выше шанс на крутую кирку</div>
+        <div class="pick-title">Pickaxe</div>
+        <div class="pick-sub">Bet from 10 Stars — higher bet = better pickaxe chance</div>
         <div class="pick-bet-row">
           <button type="button" class="pbet" data-a="10">10</button>
           <button type="button" class="pbet on" data-a="25">25</button>
@@ -169,39 +196,35 @@
           <button type="button" class="pbet" data-a="100">100</button>
         </div>
         <input type="number" id="pickBet" value="25" min="10" class="inp" />
-        <button type="button" class="btn" id="pickSpin">Крутить рулетку</button>
+        <button type="button" class="btn" id="pickSpin">Spin</button>
       </div>
       <div class="pick-phase hide" id="pickPhase2">
-        <div class="pick-title">Выбор кирки</div>
-        <div class="pick-spin-wrap">
-          <div class="pick-pin"></div>
-          <div class="pick-spin-row" id="pickSpinRow"></div>
-        </div>
+        <div class="pick-title">Pickaxe roll</div>
+        <div class="pick-spin-wrap"><div class="pick-pin"></div><div class="pick-spin-row" id="pickSpinRow"></div></div>
       </div>
       <div class="pick-phase hide" id="pickPhase3">
-        <div class="pick-title" id="pickMineTitle">Копаем...</div>
+        <div class="pick-title" id="pickMineTitle">Mining...</div>
         <div class="mine-scene" id="mineScene">
-          <div class="mine-pick" id="minePick">⛏</div>
+          <div class="mine-pick" id="minePick">*</div>
           <div class="mine-layers" id="mineLayers"></div>
         </div>
-        <div class="mine-hint" id="mineHint">Жми СТОП в нужный момент!</div>
-        <button type="button" class="btn mine-stop" id="mineStop">СТОП</button>
-        <div class="mine-depth" id="mineDepth">Глубина: 0м</div>
+        <div class="mine-hint" id="mineHint">Tap STOP in time!</div>
+        <button type="button" class="btn mine-stop" id="mineStop">STOP</button>
+        <div class="mine-depth" id="mineDepth">Depth: 0m</div>
       </div>
       <div class="pick-phase hide" id="pickPhase4">
-        <div class="pick-title" id="pickResTitle">Результат</div>
+        <div class="pick-title" id="pickResTitle">Result</div>
         <div class="pick-res-val" id="pickResVal"></div>
-        <button type="button" class="btn" id="pickAgain">Ещё раз</button>
-        <button type="button" class="btn-o" id="pickClose">Закрыть</button>
+        <button type="button" class="btn" id="pickAgain">Again</button>
+        <button type="button" class="btn-o" id="pickClose">Close</button>
       </div>
     </div>
 
-    <!-- Deposit -->
     <div class="mod" id="modPay">
       <div class="mod-b tl">
-        <button type="button" class="mx" id="btnPayX">✕</button>
-        <h3>Пополнение Stars</h3>
-        <p class="hint">Реальные Telegram Stars · от 50</p>
+        <button type="button" class="mx" id="btnPayX">X</button>
+        <h3>Top up Stars</h3>
+        <p class="hint">Real Telegram Stars · min 50</p>
         <div class="presets">
           <button type="button" class="pre" data-a="50">50</button>
           <button type="button" class="pre on" data-a="100">100</button>
@@ -209,22 +232,21 @@
           <button type="button" class="pre" data-a="500">500</button>
         </div>
         <input type="number" id="payAmt" value="100" min="50" class="inp" />
-        <button type="button" class="btn" id="btnPayGo">Оплатить</button>
+        <button type="button" class="btn" id="btnPayGo">Pay</button>
       </div>
     </div>
 
-    <!-- Admin -->
     <div class="mod" id="modAdmin">
       <div class="mod-b tl">
-        <button type="button" class="mx" id="btnAdminX">✕</button>
-        <h3>Админ-панель</h3>
+        <button type="button" class="mx" id="btnAdminX">X</button>
+        <h3>Admin</h3>
         <div class="fs" style="margin-top:12px">
           <label>Telegram ID</label>
           <input type="number" id="admId" placeholder="5198310704" />
-          <label>Сколько ★ (минус = списание)</label>
+          <label>Stars (minus = take)</label>
           <input type="number" id="admAmt" value="500" />
-          <button type="button" class="btn" id="btnAdmGive">Выдать / списать</button>
-          <button type="button" class="btn-o" id="btnAdmFree">Сбросить фри-кейс</button>
+          <button type="button" class="btn" id="btnAdmGive">Give / take</button>
+          <button type="button" class="btn-o" id="btnAdmFree">Reset free case</button>
           <div id="admRes" class="hint" style="margin-top:8px"></div>
         </div>
       </div>
@@ -233,8 +255,7 @@
     <div class="toast" id="toast"></div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+  <script src="gifts.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
