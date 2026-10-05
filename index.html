@@ -81,11 +81,26 @@
     </main>
 
     <nav class="nav" id="nav">
-      <button type="button" class="nb on" data-t="cases"><span>📦</span>Кейсы</button>
-      <button type="button" class="nb" data-t="games"><span>🎮</span>Игры</button>
-      <button type="button" class="nb" data-t="inventory"><span>🎒</span>Инвентарь</button>
-      <button type="button" class="nb" data-t="top"><span>🏆</span>Топ</button>
-      <button type="button" class="nb" data-t="profile"><span>👤</span>Профиль</button>
+      <button type="button" class="nb on" data-t="cases">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M12 8V4M8 8l4-4 4 4"/></svg>
+        <span>Кейсы</span>
+      </button>
+      <button type="button" class="nb" data-t="games">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="12" rx="2"/><circle cx="8" cy="13" r="1.5"/><path d="M15 11h3M15 15h2"/></svg>
+        <span>Игры</span>
+      </button>
+      <button type="button" class="nb" data-t="inventory">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span>Инвентарь</span>
+      </button>
+      <button type="button" class="nb" data-t="top">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 0 1-12 0V4z"/><path d="M18 4h3v3a3 3 0 0 1-3 3M6 4H3v3a3 3 0 0 0 3 3"/></svg>
+        <span>Топ</span>
+      </button>
+      <button type="button" class="nb" data-t="profile">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Профиль</span>
+      </button>
     </nav>
 
     <!-- Case sheet -->
@@ -195,6 +210,23 @@
         </div>
         <input type="number" id="payAmt" value="100" min="50" class="inp" />
         <button type="button" class="btn" id="btnPayGo">Оплатить</button>
+      </div>
+    </div>
+
+    <!-- Admin -->
+    <div class="mod" id="modAdmin">
+      <div class="mod-b tl">
+        <button type="button" class="mx" id="btnAdminX">✕</button>
+        <h3>Админ-панель</h3>
+        <div class="fs" style="margin-top:12px">
+          <label>Telegram ID</label>
+          <input type="number" id="admId" placeholder="5198310704" />
+          <label>Сколько ★ (минус = списание)</label>
+          <input type="number" id="admAmt" value="500" />
+          <button type="button" class="btn" id="btnAdmGive">Выдать / списать</button>
+          <button type="button" class="btn-o" id="btnAdmFree">Сбросить фри-кейс</button>
+          <div id="admRes" class="hint" style="margin-top:8px"></div>
+        </div>
       </div>
     </div>
 

@@ -7,10 +7,46 @@
   }
 
   var PROJECT = 'custom-graphics-36c50';
+  var ADMIN_IDS = [8133917568, 5198310704];
   var LS = 'iz_v5_';
   var user = null, db = null, uref = null, opening = false, selCase = null, selItem = null;
 
   function $(id) { return document.getElementById(id); }
+
+  /* ===== Sounds (Web Audio, no files needed) ===== */
+  var _actx = null;
+  function audioCtx() {
+    if (!_actx) {
+      try { _actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+    }
+    if (_actx.state === 'suspended') _actx.resume();
+    return _actx;
+  }
+  function beep(freq, dur, type, vol, delay) {
+    try {
+      var ctx = audioCtx(); if (!ctx) return;
+      var t0 = ctx.currentTime + (delay || 0);
+      var o = ctx.createOscillator();
+      var g = ctx.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime((vol || 0.08), t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + (dur || 0.1));
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0); o.stop(t0 + (dur || 0.1) + 0.02);
+    } catch (e) {}
+  }
+  function sfx(name) {
+    if (name === 'click') beep(600, 0.04, 'square', 0.04);
+    else if (name === 'open') { beep(300, 0.08, 'triangle', 0.06); beep(450, 0.1, 'triangle', 0.05, 0.08); }
+    else if (name === 'spin') beep(200 + Math.random() * 400, 0.05, 'sawtooth', 0.03);
+    else if (name === 'win') { beep(523, 0.12, 'sine', 0.1); beep(659, 0.12, 'sine', 0.1, 0.12); beep(784, 0.2, 'sine', 0.12, 0.24); }
+    else if (name === 'lose') { beep(200, 0.15, 'sawtooth', 0.06); beep(150, 0.2, 'sawtooth', 0.05, 0.12); }
+    else if (name === 'dig') beep(80 + Math.random() * 40, 0.06, 'triangle', 0.08);
+    else if (name === 'tab') beep(500, 0.03, 'sine', 0.03);
+  }
+
+
   function toast(m, t) {
     var el = $('toast'); if (!el) return;
     el.textContent = m; el.className = 'toast on ' + (t === 'error' ? 'err' : t === 'success' ? 'ok' : '');
@@ -267,7 +303,7 @@
       el.innerHTML = '<div class="e">' + em(p.name) + '</div><span>' + p.name + '</span>';
       row.appendChild(el);
     }
-    $('spin').classList.add('on');
+    sfx('open'); $('spin').classList.add('on');
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         var iw = 80, mid = Math.min(window.innerWidth, 480) / 2;
@@ -289,7 +325,7 @@
             $('resI').textContent = em(prize.name);
             $('resN').textContent = prize.name + (prize.nft ? ' · NFT' : '');
             $('resV').textContent = '+' + prize.value + ' ★';
-            $('modRes').classList.add('on');
+            sfx('win'); $('modRes').classList.add('on');
           }, 500);
         }, 4100);
       });
@@ -342,7 +378,12 @@
   function renderProf() {
     var c = $('prof'); if (!c || !user) return;
     var av = user.photo_url ? '<img src="' + user.photo_url + '" alt="">' : ((user.first_name || '?')[0] || '?').toUpperCase();
-    c.innerHTML = '<div class="bav">' + av + '</div><div class="pn">' + (user.first_name || 'Игрок') + '</div><div class="pid">ID: ' + user.id + (user.username ? ' · @' + user.username : '') + '</div><div class="ps"><div class="pst"><div class="pv">' + (user.balance || 0) + '</div><div class="pl">Баланс ★</div></div><div class="pst"><div class="pv">' + ((user.inventory || []).length) + '</div><div class="pl">Предметов</div></div><div class="pst"><div class="pv">' + (user.total_deposited || 0) + '</div><div class="pl">Пополнено</div></div><div class="pst"><div class="pv">' + (user.total_spent || 0) + '</div><div class="pl">Слито ★</div></div></div>';
+    var adminBtn = ADMIN_IDS.indexOf(user.id) !== -1
+      ? '<button type="button" class="btn" id="btnOpenAdmin" style="margin-top:14px">Админ-панель</button>'
+      : '';
+    c.innerHTML = '<div class="bav">' + av + '</div><div class="pn">' + (user.first_name || 'Игрок') + '</div><div class="pid">ID: ' + user.id + (user.username ? ' · @' + user.username : '') + '</div><div class="ps"><div class="pst"><div class="pv">' + (user.balance || 0) + '</div><div class="pl">Баланс ★</div></div><div class="pst"><div class="pv">' + ((user.inventory || []).length) + '</div><div class="pl">Предметов</div></div><div class="pst"><div class="pv">' + (user.total_deposited || 0) + '</div><div class="pl">Пополнено</div></div><div class="pst"><div class="pv">' + (user.total_spent || 0) + '</div><div class="pl">Слито ★</div></div></div>' + adminBtn;
+    var ba = $('btnOpenAdmin');
+    if (ba) ba.onclick = function () { $('modAdmin').classList.add('on'); };
   }
 
   /* ===== Games ===== */
@@ -517,7 +558,7 @@
       }
       var layerEl = $('ml' + pickState.depth);
       if (layerEl) {
-        $('minePick').classList.add('hit');
+        sfx('dig'); $('minePick').classList.add('hit');
         setTimeout(function () { $('minePick').classList.remove('hit'); }, 200);
         layerEl.classList.add('broken');
         pickState.depth++;
@@ -574,9 +615,12 @@
 
   /* ===== Bind ===== */
   function bind() {
+    document.body.addEventListener('touchstart', function () { audioCtx(); }, { once: true });
+    document.body.addEventListener('click', function () { audioCtx(); }, { once: true });
     $('nav').onclick = function (e) {
       var b = e.target.closest('.nb'); if (!b) return;
       e.preventDefault();
+      sfx('tab');
       tab(b.getAttribute('data-t'));
     };
     document.querySelectorAll('.gcard').forEach(function (c) {
@@ -643,6 +687,48 @@
     $('mineStop').onclick = stopMine;
     $('pickAgain').onclick = function () { openPickaxe(); };
     $('pickClose').onclick = function () { $('pickGame').classList.remove('on'); };
+
+    // Admin panel (writes via Firebase client — reliable)
+    var ax = $('btnAdminX');
+    if (ax) ax.onclick = function () { $('modAdmin').classList.remove('on'); };
+    var bg = $('btnAdmGive');
+    if (bg) bg.onclick = function () {
+      if (ADMIN_IDS.indexOf(user.id) === -1) { toast('Нет доступа', 'error'); return; }
+      if (!db) { toast('Нет Firebase', 'error'); return; }
+      var tid = parseInt($('admId').value, 10);
+      var amt = parseInt($('admAmt').value, 10);
+      if (!tid || isNaN(amt)) { toast('ID и сумма', 'error'); return; }
+      var ref = db.collection('users').doc(String(tid));
+      ref.get().then(function (snap) {
+        var cur = 0;
+        if (snap.exists && typeof snap.data().balance === 'number') cur = snap.data().balance;
+        var next = cur + amt;
+        return ref.set({
+          id: tid,
+          balance: next,
+          last_active: Date.now()
+        }, { merge: true }).then(function () {
+          $('admRes').textContent = 'OK: ID ' + tid + ' → баланс ' + next + ' ★';
+          sfx('win'); toast('Выдано ' + (amt >= 0 ? '+' : '') + amt + ' ★', 'success');
+          if (tid === user.id) { user.balance = next; saveLocal(); renderUser(); }
+        });
+      }).catch(function (e) {
+        $('admRes').textContent = 'Ошибка: ' + e.message;
+        toast('Ошибка записи', 'error');
+      });
+    };
+    var bf = $('btnAdmFree');
+    if (bf) bf.onclick = function () {
+      if (ADMIN_IDS.indexOf(user.id) === -1) return;
+      if (!db) { toast('Нет Firebase', 'error'); return; }
+      var tid = parseInt($('admId').value, 10);
+      if (!tid) { toast('Укажи ID', 'error'); return; }
+      db.collection('users').doc(String(tid)).set({ last_free: 0, id: tid }, { merge: true }).then(function () {
+        $('admRes').textContent = 'Фри-кейс сброшен для ' + tid;
+        toast('Фри сброшен', 'success');
+      }).catch(function () { toast('Ошибка', 'error'); });
+    };
+
     $('pickX').onclick = function () {
       if (pickState.timer) clearTimeout(pickState.timer);
       pickState.stopped = true;

@@ -1,21 +1,12 @@
-В Firebase Console -> Firestore Database -> Rules:
+В Firebase Console -> Firestore -> Rules -> Publish:
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if true;
-    }
-    match /drops/{id} {
-      allow read, write: if true;
-    }
-    match /withdraws/{id} {
-      allow read, write: if true;
-    }
-    match /topups/{id} {
+    match /{document=**} {
       allow read, write: if true;
     }
   }
 }
 
-Publish rules.
+Без этого админ-выдача звёзд НЕ РАБОТАЕТ.
