@@ -53,73 +53,82 @@
     if (window.giftIcon) return window.giftIcon(name);
     return '';
   }
+  function caseImg(id) {
+    return (window.CASE_IMG && window.CASE_IMG[id]) || icon('Toy Bear');
+  }
+  function gameImg(id) {
+    return (window.GAME_IMG && window.GAME_IMG[id]) || '';
+  }
 
   /* ===== CASES (English, TG prices) ===== */
   var CASES = {
     free: {
-      id: 'free', name: 'Free', price: 0, desc: 'Once every 24h', cls: 'free', art: 'F',
+      id: 'free', name: 'Free', price: 0, desc: 'Once every 24h', cls: 'free',
       prizes: [
-        { name: '1 Star', value: 1, chance: 55 },
-        { name: '2 Stars', value: 2, chance: 30 },
-        { name: '5 Stars', value: 5, chance: 8 },
-        { name: 'Teddy Bear', value: 15, chance: 3.5 },
-        { name: 'Heart', value: 15, chance: 2 },
-        { name: 'Cupcake', value: 460, chance: 0.7, nft: true },
-        { name: 'Snowman', value: 490, chance: 0.5, nft: true },
-        { name: 'Flamingo', value: 510, chance: 0.3, nft: true }
+        { name: '1 Star', value: 1, chance: 50 },
+        { name: '2 Stars', value: 2, chance: 28 },
+        { name: '5 Stars', value: 5, chance: 10 },
+        { name: 'Toy Bear', value: 15, chance: 5 },
+        { name: 'Eternal Rose', value: 25, chance: 3 },
+        { name: 'Homemade Cake', value: 50, chance: 2 },
+        { name: 'Snow Mittens', value: 500, chance: 1, nft: true },
+        { name: 'Bunny Muffin', value: 510, chance: 0.6, nft: true },
+        { name: 'Ice Cream', value: 505, chance: 0.4, nft: true }
       ]
     },
     cheap: {
-      id: 'cheap', name: 'Starter', price: 15, desc: 'Classic gifts + NFT', cls: 'cheap', art: 'S',
+      id: 'cheap', name: 'Starter', price: 15, desc: 'Classic + NFT', cls: 'cheap',
       prizes: [
-        { name: 'Teddy Bear', value: 15, chance: 28 },
-        { name: 'Heart', value: 15, chance: 22 },
-        { name: 'Rose', value: 25, chance: 18 },
-        { name: 'Gift Box', value: 25, chance: 12 },
-        { name: 'Cake', value: 50, chance: 8 },
-        { name: 'Bouquet', value: 50, chance: 5 },
-        { name: 'Cupcake', value: 460, chance: 3, nft: true },
-        { name: 'Snowman', value: 490, chance: 2, nft: true },
-        { name: 'Socks', value: 500, chance: 1.2, nft: true },
-        { name: 'Flamingo', value: 510, chance: 0.8, nft: true }
+        { name: 'Toy Bear', value: 15, chance: 26 },
+        { name: 'Eternal Rose', value: 25, chance: 20 },
+        { name: 'Homemade Cake', value: 50, chance: 14 },
+        { name: 'Berry Box', value: 50, chance: 12 },
+        { name: 'Cookie Heart', value: 50, chance: 10 },
+        { name: 'B-Day Candle', value: 50, chance: 8 },
+        { name: 'Snow Mittens', value: 500, chance: 4, nft: true },
+        { name: 'Jack-in-the-Box', value: 500, chance: 3, nft: true },
+        { name: 'Ice Cream', value: 505, chance: 2, nft: true },
+        { name: 'Top Hat', value: 530, chance: 1, nft: true }
       ]
     },
     selected: {
-      id: 'selected', name: 'Select', price: 100, desc: 'Market NFT 460-700', cls: 'sel', art: 'E',
+      id: 'selected', name: 'Select', price: 100, desc: 'Market NFT 500-700', cls: 'sel',
       prizes: [
-        { name: 'Cupcake', value: 460, chance: 12, nft: true },
-        { name: 'Snowman', value: 490, chance: 11, nft: true },
-        { name: 'Socks', value: 500, chance: 10, nft: true },
-        { name: 'Ice Cream', value: 505, chance: 9, nft: true },
-        { name: 'Flamingo', value: 510, chance: 8, nft: true },
-        { name: 'Lollipop', value: 544, chance: 7, nft: true },
-        { name: 'Snake', value: 549, chance: 6, nft: true },
-        { name: 'Jester', value: 550, chance: 6, nft: true },
-        { name: 'Sparkler', value: 587, chance: 5, nft: true },
-        { name: 'Bond', value: 590, chance: 5, nft: true },
-        { name: 'Backpack', value: 600, chance: 4, nft: true },
-        { name: 'Gingerbread', value: 610, chance: 4, nft: true },
-        { name: 'Rocket', value: 650, chance: 3, nft: true },
-        { name: 'Medal', value: 655, chance: 2.5, nft: true },
-        { name: 'Lantern', value: 666, chance: 2, nft: true },
-        { name: 'Liberty', value: 690, chance: 1.5, nft: true }
+        { name: 'Ice Cream', value: 505, chance: 12, nft: true },
+        { name: 'Snow Mittens', value: 500, chance: 11, nft: true },
+        { name: 'Hanging Star', value: 505, chance: 10, nft: true },
+        { name: 'Bunny Muffin', value: 510, chance: 9, nft: true },
+        { name: 'Spiced Wine', value: 500, chance: 8, nft: true },
+        { name: 'Top Hat', value: 530, chance: 7, nft: true },
+        { name: 'Hypno Lollipop', value: 544, chance: 6, nft: true },
+        { name: 'Lunar Snake', value: 549, chance: 6, nft: true },
+        { name: 'Jester Hat', value: 550, chance: 5, nft: true },
+        { name: 'Witch Hat', value: 550, chance: 5, nft: true },
+        { name: 'Party Sparkler', value: 587, chance: 4, nft: true },
+        { name: 'Magic Potion', value: 600, chance: 4, nft: true },
+        { name: 'Skull Flower', value: 600, chance: 3, nft: true },
+        { name: 'Genie Lamp', value: 650, chance: 3, nft: true },
+        { name: 'Voodoo Doll', value: 655, chance: 2.5, nft: true },
+        { name: 'Crystal Ball', value: 666, chance: 2, nft: true },
+        { name: 'Trapped Heart', value: 690, chance: 1.5, nft: true }
       ]
     },
     vip: {
-      id: 'vip', name: 'VIP', price: 250, desc: 'Rare market NFT', cls: 'vip', art: 'V',
+      id: 'vip', name: 'VIP', price: 250, desc: 'Rare collectibles', cls: 'vip',
       prizes: [
-        { name: 'Cherry Cake', value: 700, chance: 14, nft: true },
-        { name: 'Cool Dog', value: 709, chance: 12, nft: true },
-        { name: 'Money Bouquet', value: 710, chance: 11, nft: true },
-        { name: 'Clover', value: 721, chance: 10, nft: true },
-        { name: 'Bunny', value: 721, chance: 9, nft: true },
-        { name: 'Light Sword', value: 721, chance: 8, nft: true },
-        { name: 'Spy Ape', value: 814, chance: 7, nft: true },
-        { name: 'Pepe Plush', value: 900, chance: 6, nft: true },
-        { name: 'Durov Cap', value: 1000, chance: 5, nft: true },
-        { name: 'Magic Book', value: 600, chance: 4, nft: true },
-        { name: 'Champagne', value: 50, chance: 8 },
-        { name: 'Diamond', value: 100, chance: 6 }
+        { name: 'Vintage Cigar', value: 700, chance: 14, nft: true },
+        { name: 'Perfume Bottle', value: 710, chance: 12, nft: true },
+        { name: 'Kissed Frog', value: 721, chance: 11, nft: true },
+        { name: 'Jelly Bunny', value: 721, chance: 10, nft: true },
+        { name: 'Scared Cat', value: 721, chance: 9, nft: true },
+        { name: 'Signet Ring', value: 700, chance: 8, nft: true },
+        { name: 'Spy Agaric', value: 814, chance: 7, nft: true },
+        { name: 'Astral Shard', value: 800, chance: 6, nft: true },
+        { name: 'Precious Peach', value: 900, chance: 5, nft: true },
+        { name: 'Plush Pepe', value: 900, chance: 5, nft: true },
+        { name: "Durov's Cap", value: 1000, chance: 4, nft: true },
+        { name: 'Flying Broom', value: 650, chance: 5, nft: true },
+        { name: 'Evil Eye', value: 550, chance: 4, nft: true }
       ]
     }
   };
@@ -233,6 +242,34 @@
     else av.textContent = ((user.first_name || '?')[0] || '?').toUpperCase();
   }
 
+
+  function renderGames() {
+    var box = $('gamesList'); if (!box) return;
+    var list = [
+      { id: 'roulette', title: 'Roulette', desc: '5s bet · shared wheel' },
+      { id: 'crash', title: 'Crash', desc: '5s bet · rocket flight' },
+      { id: 'upgrade', title: 'Upgrade', desc: 'NFT · chance % · wheel' },
+      { id: 'plinko', title: 'Plinko', desc: 'Drop balls · multipliers' },
+      { id: 'pickaxe', title: 'Pickaxe', desc: 'Mine · stop in time' }
+    ];
+    box.innerHTML = '';
+    list.forEach(function (g) {
+      var el = document.createElement('div');
+      el.className = 'gcard';
+      el.setAttribute('data-g', g.id);
+      el.innerHTML = '<div class="gico"><img src="' + gameImg(g.id) + '" alt="" width="48" height="48" style="border-radius:12px"></div>' +
+        '<div class="ginfo"><div class="gt">' + g.title + '</div><div class="gd">' + g.desc + '</div></div>' +
+        '<button type="button" class="gbtn">Play</button>';
+      el.onclick = function () {
+        if (g.id === 'roulette' || g.id === 'crash') openArena(g.id);
+        else if (g.id === 'upgrade') openUpgrade();
+        else if (g.id === 'plinko') openPlinko();
+        else if (g.id === 'pickaxe') openPickaxe();
+      };
+      box.appendChild(el);
+    });
+  }
+
   /* tabs */
   function tab(name) {
     document.querySelectorAll('.nb').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-t') === name); });
@@ -258,7 +295,7 @@
       } else ph = '<div class="cp">' + c.price + ' ★</div>';
       var el = document.createElement('div');
       el.className = 'cc';
-      el.innerHTML = '<div class="cart ' + c.cls + '">' + c.art + '</div><div class="cn">' + c.name + '</div><div class="cd">' + c.desc + '</div>' + ph;
+      el.innerHTML = '<div class="cart ' + c.cls + '"><img src="' + caseImg(c.id) + '" alt="" loading="lazy"></div><div class="cn">' + c.name + '</div><div class="cd">' + c.desc + '</div>' + ph;
       el.onclick = function () { openPrev(c.id); };
       g.appendChild(el);
     });
@@ -269,7 +306,7 @@
     selCase = id;
     $('cpN').textContent = c.name;
     $('cpD').textContent = c.desc;
-    $('cpArt').innerHTML = c.prizes[0] ? '<img src="' + icon(c.prizes[0].name) + '" width="48" height="48" style="border-radius:12px">' : c.art;
+    $('cpArt').innerHTML = '<img src="' + caseImg(c.id) + '" width="52" height="52" style="border-radius:12px;object-fit:cover">';
     var now = Date.now(), pr = $('cpPr'), btn = $('btnOpen'), ok = true;
     if (c.id === 'free') {
       var left = (user.last_free || 0) + 86400000 - now;
@@ -458,7 +495,12 @@
       if (type === 'roulette') {
         view.innerHTML = '<div class="rwheel-pin"></div><div class="rwheel" id="rw"></div>';
       } else {
-        view.innerHTML = '<div class="crash-scene"><div class="crash-mult" id="cm">1.00x</div><div class="crash-rocket" id="cr">^</div></div>';
+        view.innerHTML = '<div class="crash-scene">' +
+          '<div class="crash-stars"></div>' +
+          '<div class="crash-mult" id="cm">1.00x</div>' +
+          '<div class="crash-rocket" id="cr">' +
+          '<svg viewBox="0 0 64 80" width="48" height="60"><path d="M32 2 L44 42 L32 36 L20 42 Z" fill="#ff6b6b"/><rect x="28" y="40" width="8" height="14" rx="1" fill="#ddd"/><path d="M24 54 L18 72 M40 54 L46 72" stroke="#f0c14b" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="20" r="4" fill="#fff" opacity=".5"/></svg>' +
+          '</div></div>';
       }
       $('arenaPlace').disabled = arenaState.placed;
       $('arenaPlace').textContent = arenaState.placed ? 'Bet placed' : 'Place bet';
@@ -516,7 +558,7 @@
         var mult = Math.min(crashAt, +(Math.pow(1.06, t * 3)).toFixed(2));
         var cm = $('cm'), cr = $('cr');
         if (cm) cm.textContent = mult.toFixed(2) + 'x';
-        if (cr) cr.style.bottom = Math.min(70, 10 + mult * 8) + '%';
+        if (cr) cr.style.transform = 'translateX(-50%) translateY(-' + Math.min(220, mult * 28) + 'px)';
         if (arenaState.placed && !cashed && mult >= (arenaState.choice || 1.5) && mult < crashAt) {
           cashed = true;
           var win = Math.floor(arenaState.bet * arenaState.choice);
@@ -867,15 +909,7 @@
       var b = e.target.closest('.nb'); if (!b) return;
       e.preventDefault(); sfx('tab'); tab(b.getAttribute('data-t'));
     };
-    document.querySelectorAll('.gcard').forEach(function (c) {
-      c.onclick = function () {
-        var g = c.getAttribute('data-g');
-        if (g === 'roulette' || g === 'crash') openArena(g);
-        else if (g === 'upgrade') openUpgrade();
-        else if (g === 'plinko') openPlinko();
-        else if (g === 'pickaxe') openPickaxe();
-      };
-    });
+    /* games bound in renderGames */
     $('shCaseBg').onclick = function () { $('shCase').classList.remove('on'); };
     $('btnOpen').onclick = function () {
       if (!selCase || this.disabled || opening) return;
@@ -1028,7 +1062,7 @@
       }
       applyDeepLink();
       prog(80, 'UI...');
-      renderUser(); renderCases(); bind();
+      renderUser(); renderCases(); renderGames(); bind();
       prog(100, 'Ready');
       setTimeout(function () {
         $('loader').classList.add('hide');

@@ -234,3 +234,10 @@ html,body{height:100%;background:var(--bg);color:var(--t);font-family:-apple-sys
 .g-pl{background:linear-gradient(145deg,#102030,#081018)}
 
 #plCanvas{width:100%;max-width:360px;margin:8px auto;display:block;background:var(--c);border-radius:16px;border:1px solid var(--l)}
+
+.cart img{width:56px;height:56px;object-fit:cover;border-radius:14px;display:block}
+.gico img{width:48px;height:48px;object-fit:cover;border-radius:12px;display:block}
+.pp img,.ip img,.res-i img,.si img{object-fit:cover}
+.crash-rocket{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:5;filter:drop-shadow(0 0 12px rgba(255,100,50,.6));transition:transform .08s linear}
+.crash-stars{position:absolute;inset:0;background:radial-gradient(2px 2px at 20% 30%,#fff6,transparent),radial-gradient(2px 2px at 70% 20%,#fff4,transparent),radial-gradient(1px 1px at 50% 60%,#fff5,transparent);opacity:.5}
+.crash-scene{background:linear-gradient(180deg,#050510 0%,#0a0a20 40%,#120818 100%)!important}
