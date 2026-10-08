@@ -1,178 +1,87 @@
-# Follayt — Торговая площадка игровых предметов
+# Telegram Gift Stars Bot
 
-Полноценный прототип трейд-площадки с гарантами, чатами, ролями и админ-панелью.
+Бот для раздачи Telegram Stars за подписки и рефералов.
 
-## 🚀 Как запустить (ВАЖНО)
+## Что делает бот
 
-Ошибки **404** в консоли появляются, если открывать `index.html` не из правильной папки или без локального сервера.
+1. **При /start** (в т.ч. по реф-ссылке) требует подписку на 3 канала.
+2. После успешной проверки подписок:
+   - Рефереру начисляется **+100⭐** и приходит уведомление «+100 звёзд с вашего друга!»
+3. Главное меню:
+   - Реферальная ссылка
+   - Приглашено: X из 5
+   - Кнопки: Поделиться ссылкой / Вывести звёзды / Обновить / Помощь
+4. **Вывод** от 5 рефералов / 500⭐:
+   - Создаётся заявка #1, #2, #3...
+   - Админу приходит сообщение с кнопкой «Выдано»
+   - После нажатия пользователь получает уведомление, что звёзды отправлены
+5. Техподдержка: @StarGiftMananger
 
-### Способ 1 (самый простой на Windows)
-1. Распакуйте архив.
-2. Зайдите в папку **`follayt-app`**.
-3. Дважды кликните файл **`start.bat`**.
-4. Откроется браузер на `http://localhost:8080`.
+## Важно перед запуском
 
-### Способ 2 (через терминал)
+### 1. Добавь бота администратором во ВСЕ 3 канала
+
+Особенно в **приватный** канал (`https://t.me/+MqA2Q6gWbKk0ZDlk`).
+
+Без прав админа бот **не сможет** проверить подписку.
+
+### 2. Укажи chat_id приватного канала
+
+В файле `bot.py` найди блок `CHANNELS` и замени `None` на реальный ID:
+
+```python
+{
+    "name": "Закрытый канал",
+    "url": "https://t.me/+MqA2Q6gWbKk0ZDlk",
+    "chat_id": -1001234567890,  # <-- сюда
+},
+```
+
+**Как узнать chat_id:**
+1. Добавь бота админом в канал
+2. Перешли любое сообщение из канала боту @getidsbot **или**
+3. Напиши в канале `/get_chat_id` (бот ответит ID)
+
+### 3. Проверь username публичных каналов
+
+Если `@nexvendrop` или `@stargiftszov` не работают — замени на правильные username или на числовые ID (`-100...`).
+
+## Установка и запуск
+
 ```bash
-cd follayt-app
-python -m http.server 8080
-```
-или
-```bash
-cd follayt-app
-npx serve .
+# 1. Установи зависимости
+pip install -r requirements.txt
+
+# 2. Запусти
+python bot.py
 ```
 
-**Не открывайте index.html двойным кликом** (протокол `file://`) — браузер часто блокирует скрипты и даёт 404.
+Бот будет работать, пока процесс запущен. Для 24/7 используй:
+- systemd
+- screen / tmux
+- VPS + supervisor
+- или сервисы вроде Railway / Render / Hetzner
 
-### Структура папки (должна быть именно такой)
-```
-follayt-app/
-├── index.html
-├── start.bat
-├── css/
-│   └── styles.css
-├── js/
-│   ├── firebase.js
-│   ├── utils.js
-│   ├── auth.js
-│   ├── data.js
-│   ├── ui.js
-│   ├── chat.js
-│   ├── admin.js
-│   └── app.js
-└── assets/
-```
+## Команды админа
 
-Если в консоли (F12) видите 404 на `styles.css`, `auth.js` и т.д. — вы запустили сервер **не из папки follayt-app**.
+- `/pending` — показать все ожидающие заявки на вывод
+- Кнопка «✅ Выдано» в сообщении о заявке
 
----
+Админы: `8920532333`
 
-## Возможности
+## Структура файлов
 
-- **Категории игр**: Roblox, CS2, Valorant, Fortnite, Minecraft, Dota 2, GTA, PUBG и др.
-- **Товары**: добавление с фото (Firebase Storage), описание, цена / трейд
-- **Чаты**: создание чата по товару, переписка в реальном времени
-- **FollaytBot**: автоматически пишет правила (привязать TG, запрет ухода в другие соцсети)
-- **Система гарантов**:
-  1. В чате кнопка «Найти гаранта»
-  2. Список онлайн-гарантов + кнопка «Пригласить в чат»
-  3. Гаранту приходит уведомление
-  4. Гарант добавляется в чат и помогает провести сделку
-- **Заявка на роль гаранта**: форма (ник, TG, канал с пруфами, часы онлайн) → админы принимают/отклоняют → выдаётся роль + тег
-- **Привязка Telegram**: уникальная (один TG = один аккаунт)
-- **Роли**: user → guarantor → helper → admin → owner
-- **Админ-панель**: заявки гарантов, бан/разбан
-- **Панель владельца**: выдача ролей, создание конкурсов + всё админское
+- `bot.py` — весь код бота
+- `bot_database.db` — создаётся автоматически (SQLite)
+- `requirements.txt` — зависимости
 
-## Настройка Firebase
+## Настройки (в начале bot.py)
 
-Firebase уже настроен на проект `custom-graphics-36c50`.
+| Параметр            | Значение     | Описание                      |
+|---------------------|--------------|-------------------------------|
+| STARS_PER_REF       | 100          | Звёзд за 1 реферала           |
+| MIN_STARS_WITHDRAW  | 500          | Минимум звёзд для вывода      |
+| MIN_REFS_WITHDRAW   | 5            | Минимум рефералов для вывода  |
+| ADMIN_IDS           | [8920532333] | ID админов                    |
 
-### 1. Authentication
-Firebase Console → Authentication → Sign-in method → включите **Email/Password**.
-
-### 2. Firestore Database
-Создайте базу (если ещё нет).
-
-Рекомендуемые коллекции (создадутся автоматически):
-- `users`, `products`, `chats`, `messages`, `guarantorApps`, `tgUsernames`, `notifications`, `contests`
-
-### 3. Storage
-Включите Firebase Storage. Пример правил для тестов:
-
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /products/{userId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
-
-### 4. Firestore Security Rules (пример для старта)
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && (request.auth.uid == userId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'owner']);
-    }
-    match /products/{id} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null &&
-        (resource.data.ownerId == request.auth.uid ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'owner']);
-    }
-    match /chats/{id} {
-      allow read, write: if request.auth != null &&
-        request.auth.uid in resource.data.participants;
-      allow create: if request.auth != null;
-    }
-    match /messages/{id} {
-      allow read, create: if request.auth != null;
-    }
-    match /guarantorApps/{id} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'owner'];
-    }
-    match /tgUsernames/{id} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    match /notifications/{id} {
-      allow read, write: if request.auth != null;
-    }
-    match /contests/{id} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'owner'];
-    }
-  }
-}
-```
-
-> Для продакшена сделайте правила строже.
-
-## Проблемы и решения
-
-| Проблема | Решение |
-|----------|---------|
-| 404 на css/js файлы | Запускайте сервер **из папки follayt-app** |
-| CSP блокирует eval | Tailwind CDN использует eval. На хостинге с жёстким CSP добавьте `'unsafe-eval'` или соберите Tailwind локально |
-| Firebase permission denied | Проверьте правила Firestore / Storage и что Email/Password включён |
-| Чёрный экран | Откройте F12 → Console, смотрите ошибки |
-
-Удачной торговли! 🛡️
-
-
-## Деплой на GitHub Pages
-
-1. Залей содержимое папки `follayt-app` в репозиторий (корень или /docs).
-2. В Firebase Console → Authentication → Settings → **Authorized domains** добавь:
-   - `floralss.github.io`
-   - `localhost`
-3. Firestore Rules — для старта минимум:
-```
-match /products/{id} {
-  allow read: if true;
-  allow write: if request.auth != null;
-}
-match /users/{id} {
-  allow read: if true;
-  allow write: if request.auth != null;
-}
-```
-Без `allow read: if true` на products сайт будет крутить спиннер вечно.
-
-## Иконка сайта
-Файл `assets/favicon.svg` — щит Follayt. Уже подключена в index.html.
+Всё готово и организовано. После указания chat_id приватного канала бот полностью работоспособен.
