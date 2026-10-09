@@ -77,6 +77,12 @@ class MiniGameStates(StatesGroup):
     waiting_give_amount = State()
 
 
+class BanStates(StatesGroup):
+    waiting_target = State()
+    waiting_reason = State()
+    waiting_unban = State()
+
+
 # ==================== БАЗА ДАННЫХ ====================
 async def init_db():
     async with aiosqlite.connect(DB_PATH) as db:
@@ -122,6 +128,16 @@ async def init_db():
                 created_at TEXT,
                 FOREIGN KEY (game_id) REFERENCES minigame(id),
                 FOREIGN KEY (user_id) REFERENCES users(user_id)
+            )
+        """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS bans (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                username TEXT,
+                reason TEXT,
+                banned_by INTEGER,
+                created_at TEXT
             )
         """)
         await db.commit()
@@ -288,6 +304,64 @@ async def get_user_bet_total(game_id: int, user_id: int) -> int:
             return row[0] if row else 0
 
 
+# --- Баны ---
+async def is_banned(user_id: int, username: str = None) -> Optional[dict]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT * FROM bans WHERE user_id = ? LIMIT 1", (user_id,)
+        ) as cursor:
+            row = await cursor.fetchone()
+            if row:
+                return dict(row)
+        if username:
+            uname = username.lstrip("@").lower()
+            async with db.execute(
+                "SELECT * FROM bans WHERE LOWER(REPLACE(username, '@', '')) = ? LIMIT 1",
+                (uname,)
+            ) as cursor:
+                row = await cursor.fetchone()
+                if row:
+                    return dict(row)
+    return None
+
+
+async def ban_user(user_id: int, username: str, reason: str, banned_by: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        # Удаляем старый бан если был
+        await db.execute("DELETE FROM bans WHERE user_id = ?", (user_id,))
+        if username:
+            uname = username.lstrip("@").lower()
+            await db.execute(
+                "DELETE FROM bans WHERE LOWER(REPLACE(username, '@', '')) = ?", (uname,)
+            )
+        await db.execute(
+            "INSERT INTO bans (user_id, username, reason, banned_by, created_at) VALUES (?, ?, ?, ?, ?)",
+            (user_id, username or "", reason or "", banned_by, datetime.now().isoformat())
+        )
+        await db.commit()
+
+
+async def unban_user(user_id: int = None, username: str = None):
+    async with aiosqlite.connect(DB_PATH) as db:
+        if user_id:
+            await db.execute("DELETE FROM bans WHERE user_id = ?", (user_id,))
+        if username:
+            uname = username.lstrip("@").lower()
+            await db.execute(
+                "DELETE FROM bans WHERE LOWER(REPLACE(username, '@', '')) = ?", (uname,)
+            )
+        await db.commit()
+
+
+async def get_all_bans() -> list:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute("SELECT * FROM bans ORDER BY id DESC") as cursor:
+            rows = await cursor.fetchall()
+            return [dict(r) for r in rows]
+
+
 # ==================== ПРОВЕРКА ПОДПИСОК ====================
 async def check_subscriptions(bot: Bot, user_id: int) -> tuple[bool, list[str]]:
     """Возвращает (все_подписаны, список_неподписанных)"""
@@ -377,10 +451,37 @@ HELP_TEXT = (
 
 
 # ==================== ОБРАБОТЧИКИ ====================
+async def check_ban_and_reply(message: types.Message) -> bool:
+    """True если пользователь забанен (и уже ответили)."""
+    ban = await is_banned(message.from_user.id, message.from_user.username)
+    if ban:
+        reason = ban.get("reason") or "без указания причины"
+        await message.answer(
+            f"🚫 <b>Ваш аккаунт заблокирован</b>\n\n"
+            f"Причина: {reason}\n\n"
+            f"По вопросам: {SUPPORT_USERNAME}",
+            parse_mode="HTML"
+        )
+        return True
+    return False
+
+
 async def cmd_start(message: types.Message, bot: Bot, state: FSMContext):
     user_id = message.from_user.id
     username = message.from_user.username or ""
     full_name = message.from_user.full_name or ""
+
+    # Проверка бана
+    ban = await is_banned(user_id, username)
+    if ban:
+        reason = ban.get("reason") or "без указания причины"
+        await message.answer(
+            f"🚫 <b>Ваш аккаунт заблокирован</b>\n\n"
+            f"Причина: {reason}\n\n"
+            f"По вопросам: {SUPPORT_USERNAME}",
+            parse_mode="HTML"
+        )
+        return
 
     # Парсим реферала
     referrer_id = None
@@ -477,6 +578,8 @@ async def callback_check_subs(callback: types.CallbackQuery, bot: Bot):
 
 
 async def cmd_update(message: types.Message, bot: Bot):
+    if await check_ban_and_reply(message):
+        return
     user = await get_user(message.from_user.id)
     if not user or not user.get("is_subscribed"):
         await message.answer("Сначала пройди проверку подписок — /start")
@@ -490,10 +593,14 @@ async def cmd_update(message: types.Message, bot: Bot):
 
 
 async def cmd_help(message: types.Message):
+    if await check_ban_and_reply(message):
+        return
     await message.answer(HELP_TEXT, parse_mode="HTML")
 
 
 async def cmd_share(message: types.Message, bot: Bot):
+    if await check_ban_and_reply(message):
+        return
     user = await get_user(message.from_user.id)
     if not user or not user.get("is_subscribed"):
         await message.answer("Сначала пройди проверку подписок — /start")
@@ -508,6 +615,8 @@ async def cmd_share(message: types.Message, bot: Bot):
 
 
 async def cmd_withdraw(message: types.Message, bot: Bot):
+    if await check_ban_and_reply(message):
+        return
     user_id = message.from_user.id
     user = await get_user(user_id)
     if not user or not user.get("is_subscribed"):
@@ -560,6 +669,8 @@ async def cmd_withdraw(message: types.Message, bot: Bot):
 
 # ==================== ПОЖЕРТВОВАНИЕ ====================
 async def cmd_donate(message: types.Message, state: FSMContext):
+    if await check_ban_and_reply(message):
+        return
     user = await get_user(message.from_user.id)
     if not user or not user.get("is_subscribed"):
         await message.answer("Сначала пройди проверку подписок — /start")
@@ -619,87 +730,40 @@ async def successful_payment_handler(message: types.Message, bot: Bot):
     if not payment:
         return
 
+    # payload = donate_USERID_AMOUNT
+    try:
+        parts = payment.invoice_payload.split("_")
+        if parts[0] != "donate":
+            return
+        user_id = int(parts[1])
+        amount = int(parts[2])
+    except Exception:
+        amount = payment.total_amount
+        user_id = message.from_user.id
+
     username = message.from_user.username or "нет"
     full_name = message.from_user.full_name or ""
-    payload = payment.invoice_payload or ""
 
-    try:
-        parts = payload.split("_")
-        kind = parts[0]
-    except Exception:
-        kind = ""
+    # Благодарим пользователя
+    await message.answer(
+        f"✅ <b>Спасибо за пожертвование {amount}⭐!</b>\n\n"
+        f"Твои звёзды пойдут на ускорение выводов.\n"
+        f"Мы очень ценим твою поддержку! 💫",
+        parse_mode="HTML"
+    )
 
-    # --- Пожертвование ---
-    if kind == "donate":
+    # Уведомляем админов
+    admin_text = (
+        f"💫 <b>Пожертвование!</b>\n\n"
+        f"Юз <b>@{username}</b> ({full_name})\n"
+        f"ID: <code>{user_id}</code>\n"
+        f"Пожертвовал <b>{amount}⭐</b> на быстрые выводы"
+    )
+    for admin_id in ADMIN_IDS:
         try:
-            user_id = int(parts[1])
-            amount = int(parts[2])
-        except Exception:
-            amount = payment.total_amount
-            user_id = message.from_user.id
-
-        await message.answer(
-            f"✅ <b>Спасибо за пожертвование {amount}⭐!</b>\n\n"
-            f"Твои звёзды пойдут на ускорение выводов.\n"
-            f"Мы очень ценим твою поддержку! 💫",
-            parse_mode="HTML"
-        )
-
-        admin_text = (
-            f"💫 <b>Пожертвование!</b>\n\n"
-            f"Юз <b>@{username}</b> ({full_name})\n"
-            f"ID: <code>{user_id}</code>\n"
-            f"Пожертвовал <b>{amount}⭐</b> на быстрые выводы"
-        )
-        for admin_id in ADMIN_IDS:
-            try:
-                await bot.send_message(admin_id, admin_text, parse_mode="HTML")
-            except Exception as e:
-                logger.error(f"Не удалось отправить админу {admin_id}: {e}")
-        return
-
-    # --- Ставка в мини-игру (реальные звёзды) ---
-    if kind == "mgbet":
-        try:
-            user_id = int(parts[1])
-            amount = int(parts[2])
-            game_id = int(parts[3])
-        except Exception:
-            amount = payment.total_amount
-            user_id = message.from_user.id
-            game = await get_active_minigame()
-            game_id = game["id"] if game else 0
-
-        # Добавляем ставку в лидерборд
-        if game_id:
-            await add_minigame_bet(game_id, user_id, amount)
-            my_total = await get_user_bet_total(game_id, user_id)
-        else:
-            my_total = amount
-
-        await message.answer(
-            f"✅ <b>Ставка принята!</b>\n\n"
-            f"Ты закинул <b>{amount}⭐</b> реальных звёзд в мини-игру.\n"
-            f"Всего в мини-игре у тебя: <b>{my_total}⭐</b>\n\n"
-            f"Нажми «🎮 Мини-игра» чтобы увидеть лидерборд.",
-            parse_mode="HTML",
-            reply_markup=await get_main_keyboard()
-        )
-
-        # Уведомляем админов
-        admin_text = (
-            f"🎮 <b>Ставка в мини-игру!</b>\n\n"
-            f"Юз <b>@{username}</b> ({full_name})\n"
-            f"ID: <code>{user_id}</code>\n"
-            f"Закинул <b>{amount}⭐</b> реальных звёзд\n"
-            f"Всего в топе: <b>{my_total}⭐</b>"
-        )
-        for admin_id in ADMIN_IDS:
-            try:
-                await bot.send_message(admin_id, admin_text, parse_mode="HTML")
-            except Exception as e:
-                logger.error(f"Не удалось отправить админу {admin_id}: {e}")
-        return
+            await bot.send_message(admin_id, admin_text, parse_mode="HTML")
+        except Exception as e:
+            logger.error(f"Не удалось отправить админу {admin_id}: {e}")
 
 
 async def callback_issue(callback: types.CallbackQuery, bot: Bot):
@@ -803,6 +867,12 @@ async def get_admin_panel_keyboard(page: int, total: int, items: list) -> Inline
         builder.row(InlineKeyboardButton(text="🎮 Управление мини-игрой", callback_data="admin_mg_manage"))
     else:
         builder.row(InlineKeyboardButton(text="🎮 Создать мини-игру", callback_data="admin_mg_create"))
+    # Баны
+    builder.row(
+        InlineKeyboardButton(text="🚫 Забанить", callback_data="admin_ban"),
+        InlineKeyboardButton(text="✅ Разбанить", callback_data="admin_unban")
+    )
+    builder.row(InlineKeyboardButton(text="📋 Список банов", callback_data="admin_banlist"))
     return builder.as_markup()
 
 
@@ -917,6 +987,8 @@ def format_leaderboard(leaderboard: list, prize: int = 0) -> str:
 
 
 async def cmd_minigame(message: types.Message):
+    if await check_ban_and_reply(message):
+        return
     user = await get_user(message.from_user.id)
     if not user or not user.get("is_subscribed"):
         await message.answer("Сначала пройди проверку подписок — /start")
@@ -969,30 +1041,31 @@ async def callback_mg_bet(callback: types.CallbackQuery, state: FSMContext):
         await callback.answer("Мини-игра не активна", show_alert=True)
         return
 
+    user = await get_user(callback.from_user.id)
+    stars = user.get("stars", 0) if user else 0
+    if stars < 1:
+        await callback.answer("У тебя нет звёзд для ставки", show_alert=True)
+        return
+
     await callback.message.answer(
-        "⭐ <b>Закинуть реальные звёзды</b>\n\n"
-        "Напиши сумму <b>реальных Telegram Stars</b>, которую хочешь закинуть в мини-игру "
-        "(только число, например: <code>50</code>).\n\n"
-        "Минимум: 1⭐\n"
-        "После ввода суммы появится кнопка оплаты настоящими звёздами.",
+        f"⭐ <b>Закинуть звёзды</b>\n\n"
+        f"У тебя на балансе: <b>{stars}⭐</b>\n"
+        f"Напиши сумму, которую хочешь закинуть (только число):",
         parse_mode="HTML"
     )
     await state.set_state(MiniGameStates.waiting_bet)
     await callback.answer()
 
 
-async def process_mg_bet(message: types.Message, state: FSMContext, bot: Bot):
+async def process_mg_bet(message: types.Message, state: FSMContext):
     text = message.text.strip()
     if not text.isdigit():
-        await message.answer("❌ Введи только число (например: 50)")
+        await message.answer("❌ Введи только число")
         return
 
     amount = int(text)
     if amount < 1:
         await message.answer("❌ Минимум 1⭐")
-        return
-    if amount > 100000:
-        await message.answer("❌ Слишком большая сумма")
         return
 
     game = await get_active_minigame()
@@ -1001,24 +1074,25 @@ async def process_mg_bet(message: types.Message, state: FSMContext, bot: Bot):
         await message.answer("Мини-игра уже завершена.")
         return
 
+    user = await get_user(message.from_user.id)
+    stars = user.get("stars", 0) if user else 0
+    if amount > stars:
+        await message.answer(f"❌ Недостаточно звёзд. У тебя: {stars}⭐")
+        return
+
+    # Списываем и добавляем ставку
+    await update_user(message.from_user.id, stars=stars - amount)
+    await add_minigame_bet(game["id"], message.from_user.id, amount)
     await state.clear()
 
-    # Отправляем инвойс на оплату реальными звёздами (XTR)
-    prices = [LabeledPrice(label=f"Ставка в мини-игру {amount}⭐", amount=amount)]
-
-    try:
-        await bot.send_invoice(
-            chat_id=message.chat.id,
-            title="Ставка в мини-игру",
-            description=f"Вы закидываете {amount} реальных Telegram Stars в мини-игру.",
-            payload=f"mgbet_{message.from_user.id}_{amount}_{game['id']}",
-            currency="XTR",  # Telegram Stars
-            prices=prices,
-            provider_token="",  # пустой для Stars
-        )
-    except Exception as e:
-        logger.error(f"Ошибка создания инвойса мини-игры: {e}")
-        await message.answer("❌ Не удалось создать платёж. Попробуй позже.")
+    my_total = await get_user_bet_total(game["id"], message.from_user.id)
+    await message.answer(
+        f"✅ Ты закинул <b>{amount}⭐</b>!\n"
+        f"Всего в мини-игре у тебя: <b>{my_total}⭐</b>\n\n"
+        f"Нажми «🎮 Мини-игра» чтобы увидеть лидерборд.",
+        parse_mode="HTML",
+        reply_markup=await get_main_keyboard()
+    )
 
 
 # --- Админ: создать ---
@@ -1236,6 +1310,278 @@ async def process_mg_give_amount(message: types.Message, state: FSMContext):
         pass
 
 
+# ==================== БАНЫ (АДМИН) ====================
+async def callback_admin_ban(callback: types.CallbackQuery, state: FSMContext):
+    if callback.from_user.id not in ADMIN_IDS:
+        await callback.answer("Нет доступа", show_alert=True)
+        return
+    await callback.message.answer(
+        "🚫 <b>Забанить пользователя</b>\n\n"
+        "Отправь <b>ID</b> или <b>@username</b>:",
+        parse_mode="HTML"
+    )
+    await state.set_state(BanStates.waiting_target)
+    await callback.answer()
+
+
+async def process_ban_target(message: types.Message, state: FSMContext):
+    if message.from_user.id not in ADMIN_IDS:
+        await state.clear()
+        return
+    text = message.text.strip()
+    target_id = None
+    target_username = ""
+
+    if text.startswith("@") or (not text.isdigit() and text.replace("_", "").isalnum()):
+        target_username = text.lstrip("@")
+        # Ищем в базе по username
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute(
+                "SELECT user_id, username FROM users WHERE LOWER(username) = ? LIMIT 1",
+                (target_username.lower(),)
+            ) as cursor:
+                row = await cursor.fetchone()
+                if row:
+                    target_id = row["user_id"]
+                    target_username = row["username"] or target_username
+        if not target_id:
+            # Баним только по username (ещё не заходил в бота)
+            target_id = 0
+    elif text.isdigit():
+        target_id = int(text)
+        user = await get_user(target_id)
+        if user:
+            target_username = user.get("username") or ""
+    else:
+        await message.answer("❌ Отправь ID (число) или @username")
+        return
+
+    if target_id and target_id in ADMIN_IDS:
+        await message.answer("❌ Нельзя забанить админа")
+        await state.clear()
+        return
+
+    await state.update_data(ban_target_id=target_id, ban_target_username=target_username)
+    await message.answer(
+        f"Цель: <code>{target_id or '—'}</code> @{target_username or 'нет'}\n\n"
+        f"Напиши <b>причину бана</b> (или «-» без причины):",
+        parse_mode="HTML"
+    )
+    await state.set_state(BanStates.waiting_reason)
+
+
+async def process_ban_reason(message: types.Message, state: FSMContext, bot: Bot):
+    if message.from_user.id not in ADMIN_IDS:
+        await state.clear()
+        return
+    reason = message.text.strip()
+    if reason == "-":
+        reason = ""
+
+    data = await state.get_data()
+    target_id = data.get("ban_target_id") or 0
+    target_username = data.get("ban_target_username") or ""
+    await state.clear()
+
+    await ban_user(target_id, target_username, reason, message.from_user.id)
+
+    await message.answer(
+        f"✅ Пользователь заблокирован\n"
+        f"ID: <code>{target_id or '—'}</code>\n"
+        f"Username: @{target_username or 'нет'}\n"
+        f"Причина: {reason or 'не указана'}",
+        parse_mode="HTML"
+    )
+
+    if target_id:
+        try:
+            await bot.send_message(
+                target_id,
+                f"🚫 <b>Ваш аккаунт заблокирован</b>\n\n"
+                f"Причина: {reason or 'без указания причины'}\n\n"
+                f"По вопросам: {SUPPORT_USERNAME}",
+                parse_mode="HTML"
+            )
+        except Exception:
+            pass
+
+
+async def callback_admin_unban(callback: types.CallbackQuery, state: FSMContext):
+    if callback.from_user.id not in ADMIN_IDS:
+        await callback.answer("Нет доступа", show_alert=True)
+        return
+    await callback.message.answer(
+        "✅ <b>Разбанить пользователя</b>\n\n"
+        "Отправь <b>ID</b> или <b>@username</b>:",
+        parse_mode="HTML"
+    )
+    await state.set_state(BanStates.waiting_unban)
+    await callback.answer()
+
+
+async def process_unban(message: types.Message, state: FSMContext, bot: Bot):
+    if message.from_user.id not in ADMIN_IDS:
+        await state.clear()
+        return
+    text = message.text.strip()
+    target_id = None
+    target_username = None
+
+    if text.startswith("@") or (not text.isdigit() and text.replace("_", "").isalnum()):
+        target_username = text.lstrip("@")
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute(
+                "SELECT user_id FROM users WHERE LOWER(username) = ? LIMIT 1",
+                (target_username.lower(),)
+            ) as cursor:
+                row = await cursor.fetchone()
+                if row:
+                    target_id = row["user_id"]
+    elif text.isdigit():
+        target_id = int(text)
+    else:
+        await message.answer("❌ Отправь ID или @username")
+        return
+
+    await unban_user(user_id=target_id, username=target_username)
+    await state.clear()
+    await message.answer(
+        f"✅ Разбанен: <code>{target_id or '—'}</code> @{target_username or '—'}",
+        parse_mode="HTML"
+    )
+    if target_id:
+        try:
+            await bot.send_message(
+                target_id,
+                "✅ Ваш аккаунт разблокирован. Можете пользоваться ботом — /start",
+                parse_mode="HTML"
+            )
+        except Exception:
+            pass
+
+
+async def callback_admin_banlist(callback: types.CallbackQuery):
+    if callback.from_user.id not in ADMIN_IDS:
+        await callback.answer("Нет доступа", show_alert=True)
+        return
+    bans = await get_all_bans()
+    if not bans:
+        await callback.message.answer("📋 Список банов пуст.")
+        await callback.answer()
+        return
+    lines = []
+    for b in bans[:30]:
+        lines.append(
+            f"• ID <code>{b.get('user_id') or '—'}</code> "
+            f"@{b.get('username') or 'нет'} — {b.get('reason') or 'без причины'}"
+        )
+    text = "📋 <b>Список банов</b> (" + str(len(bans)) + "):\n\n" + "\n".join(lines)
+    if len(bans) > 30:
+        text += f"\n\n… и ещё {len(bans) - 30}"
+    await callback.message.answer(text, parse_mode="HTML")
+    await callback.answer()
+
+
+async def _resolve_target(text: str) -> tuple:
+    """Возвращает (user_id, username) из ID или @username."""
+    text = text.strip().lstrip("@")
+    target_id = 0
+    target_username = ""
+    if text.isdigit():
+        target_id = int(text)
+        user = await get_user(target_id)
+        if user:
+            target_username = user.get("username") or ""
+    else:
+        target_username = text
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute(
+                "SELECT user_id, username FROM users WHERE LOWER(username) = ? LIMIT 1",
+                (text.lower(),)
+            ) as cursor:
+                row = await cursor.fetchone()
+                if row:
+                    target_id = row["user_id"]
+                    target_username = row["username"] or text
+    return target_id, target_username
+
+
+async def cmd_ban(message: types.Message, state: FSMContext, bot: Bot):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+    # /ban @user причина   или   /ban 123456 причина
+    parts = message.text.split(maxsplit=2)
+    if len(parts) >= 2:
+        target_raw = parts[1]
+        reason = parts[2] if len(parts) >= 3 else ""
+        target_id, target_username = await _resolve_target(target_raw)
+        if target_id and target_id in ADMIN_IDS:
+            await message.answer("❌ Нельзя забанить админа")
+            return
+        await ban_user(target_id, target_username, reason, message.from_user.id)
+        await message.answer(
+            f"✅ Заблокирован\n"
+            f"ID: <code>{target_id or '—'}</code>\n"
+            f"Username: @{target_username or 'нет'}\n"
+            f"Причина: {reason or 'не указана'}",
+            parse_mode="HTML"
+        )
+        if target_id:
+            try:
+                await bot.send_message(
+                    target_id,
+                    f"🚫 <b>Ваш аккаунт заблокирован</b>\n\n"
+                    f"Причина: {reason or 'без указания причины'}\n\n"
+                    f"По вопросам: {SUPPORT_USERNAME}",
+                    parse_mode="HTML"
+                )
+            except Exception:
+                pass
+        await state.clear()
+        return
+
+    await message.answer(
+        "🚫 Отправь <b>ID</b> или <b>@username</b> для бана:\n"
+        "Или сразу: <code>/ban @user причина</code>",
+        parse_mode="HTML"
+    )
+    await state.set_state(BanStates.waiting_target)
+
+
+async def cmd_unban(message: types.Message, state: FSMContext, bot: Bot):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+    parts = message.text.split(maxsplit=1)
+    if len(parts) >= 2:
+        target_id, target_username = await _resolve_target(parts[1])
+        await unban_user(user_id=target_id or None, username=target_username or None)
+        await message.answer(
+            f"✅ Разбанен: <code>{target_id or '—'}</code> @{target_username or '—'}",
+            parse_mode="HTML"
+        )
+        if target_id:
+            try:
+                await bot.send_message(
+                    target_id,
+                    "✅ Ваш аккаунт разблокирован. Можете пользоваться ботом — /start",
+                    parse_mode="HTML"
+                )
+            except Exception:
+                pass
+        await state.clear()
+        return
+
+    await message.answer(
+        "✅ Отправь <b>ID</b> или <b>@username</b> для разбана:\n"
+        "Или сразу: <code>/unban @user</code>",
+        parse_mode="HTML"
+    )
+    await state.set_state(BanStates.waiting_unban)
+
+
 # ==================== MAIN ====================
 async def main():
     await init_db()
@@ -1276,6 +1622,16 @@ async def main():
     dp.message.register(process_mg_give_id, MiniGameStates.waiting_give_id)
     dp.message.register(process_mg_give_amount, MiniGameStates.waiting_give_amount)
 
+    # Баны
+    dp.callback_query.register(callback_admin_ban, F.data == "admin_ban")
+    dp.callback_query.register(callback_admin_unban, F.data == "admin_unban")
+    dp.callback_query.register(callback_admin_banlist, F.data == "admin_banlist")
+    dp.message.register(process_ban_target, BanStates.waiting_target)
+    dp.message.register(process_ban_reason, BanStates.waiting_reason)
+    dp.message.register(process_unban, BanStates.waiting_unban)
+    dp.message.register(cmd_ban, Command("ban"))
+    dp.message.register(cmd_unban, Command("unban"))
+
     # Команда для получения chat_id (полезно для приватного канала)
     @dp.message(Command("get_chat_id"))
     async def get_chat_id_handler(message: types.Message):
@@ -1283,6 +1639,11 @@ async def main():
             await message.answer(f"Chat ID: <code>{message.chat.id}</code>", parse_mode="HTML")
         else:
             await message.answer(f"Твой user_id: <code>{message.from_user.id}</code>", parse_mode="HTML")
+
+    try:
+        await bot.delete_webhook(drop_pending_updates=False)
+    except Exception as e:
+        logger.warning(f"delete_webhook: {e}")
 
     logger.info("Бот запущен...")
     await dp.start_polling(bot)
